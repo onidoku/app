@@ -65,7 +65,6 @@ packages/core     shared TypeScript: site-config format, extraction, library, up
                   no browser APIs, so it can also run in an Android WebView/QuickJS later.
 apps/extension    MV3 extension for Chrome and Firefox (popup, in-page reader, background update checks).
 apps/test-site    fake comic + novel site on localhost:4173 for testing. generated content only.
-apps/site         the website (onidoku.github.io/app): plain HTML and CSS, no build step.
 configs/          site configs for the test site (bundled into dev builds only).
 ```
 
@@ -126,14 +125,13 @@ for the listing, AMO's icon is taken from the manifest; `apps/extension/art/stor
 
 ### website
 
-`apps/site/` is published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main` that
-touches it (one-time setup: **Settings → Pages → Source: GitHub Actions**). to preview it, serve the folder,
-e.g. `python3 -m http.server -d apps/site`.
+the website, https://onidoku.github.io, lives in its own repo:
+[onidoku/onidoku.github.io](https://github.com/onidoku/onidoku.github.io).
 
-its screenshots are real: `pnpm --filter @onidoku/extension shots` builds the release extension, adds
-Pepper&Carrot and a few Standard Ebooks titles, and captures each page in light and dark as WebP in
-`apps/site/img/`, plus the social preview `og.png`. it needs network access and `cwebp`. pass names to
-retake only some, e.g. `shots library popup og`.
+its screenshots are real: with that repo checked out next to this one, `pnpm --filter @onidoku/extension shots`
+builds the release extension, adds Pepper&Carrot and a few Standard Ebooks titles, and writes each page in light
+and dark as WebP to its `img/`, plus the social preview `og.png` (set `ONIDOKU_SITE` if the checkout is elsewhere).
+it needs network access and `cwebp`. pass names to retake only some, e.g. `shots library popup og`.
 
 ### icons
 

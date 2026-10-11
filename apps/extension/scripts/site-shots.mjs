@@ -1,15 +1,19 @@
-// Screenshots for the website (apps/site/img/), taken from a release build of the extension
-// reading Pepper&Carrot (CC BY 4.0) and Standard Ebooks (public domain).
+// Screenshots for the website (the onidoku.github.io repo, checked out next to this one, or $ONIDOKU_SITE),
+// taken from a release build of the extension reading Pepper&Carrot (CC BY 4.0) and Standard Ebooks (public domain).
 // Run `pnpm --filter @onidoku/extension shots [name...]` (needs network access, `playwright install chromium`
 // and `cwebp`). Names limit it to some shots, e.g. `shots library popup`.
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
 import { extname, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { chromium } from '@playwright/test';
 
-const OUT = new URL('../../site/img/', import.meta.url).pathname;
+const SITE = process.env.ONIDOKU_SITE ?? fileURLToPath(new URL('../../../../onidoku.github.io/', import.meta.url));
+if (!existsSync(join(SITE, 'index.html'))) throw new Error(`No website checkout at ${SITE} (set ONIDOKU_SITE)`);
+const OUT = join(SITE, 'img');
 const PC = 'https://www.peppercarrot.com';
 const SE = 'https://standardebooks.org';
 const BOOKS = [
@@ -119,10 +123,9 @@ await context.close();
 
 // The social preview card (og:image): the site's own hero, so run this after the shots above.
 if (want('og')) {
-  const site = new URL('../../site/', import.meta.url).pathname;
   const types = { '.html': 'text/html', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.woff2': 'font/woff2' };
   const server = createServer(async (req, res) => {
-    const file = join(site, new URL(req.url, 'http://x').pathname.replace(/\/$/, '/index.html'));
+    const file = join(SITE, new URL(req.url, 'http://x').pathname.replace(/\/$/, '/index.html'));
     try {
       res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' }).end(await readFile(file));
     } catch {
