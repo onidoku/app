@@ -1,0 +1,41 @@
+{
+  "name": "@onidoku/extension",
+  "version": "0.1.0",
+  "license": "FSL-1.1-MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node build.mjs --watch",
+    "build": "node build.mjs",
+    "build:dev": "node build.mjs --dev",
+    "icons": "node scripts/make-icons.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "node build.mjs --dev && playwright test",
+    "package": "node scripts/package.mjs",
+    "build:firefox": "node build.mjs --target=firefox",
+    "dev:firefox": "node build.mjs --target=firefox --watch",
+    "firefox": "web-ext run --source-dir dist-firefox --start-url http://localhost:4173",
+    "lint:firefox": "node build.mjs --target=firefox && web-ext lint --source-dir dist-firefox --self-hosted=false"
+  },
+  "dependencies": {
+    "@onidoku/core": "workspace:*",
+    "linkedom": "^0.18.13"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/chrome": "^0.3.4",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3",
+    "web-ext": "^10.7.0"
+  },
+  "imports": {
+    "#parse-html": {
+      "firefox": "./src/parse-html.native.ts",
+      "default": "./src/parse-html.ts"
+    },
+    "#paperback": {
+      "firefox": "./src/paperback.firefox.ts",
+      "default": "./src/paperback.ts"
+    }
+  }
+}

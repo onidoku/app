@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>sources · onidoku</title>
+    <link rel="stylesheet" href="ui.css" />
+  </head>
+  <body class="app">
+    <main>
+      <div id="nav"></div>
+      <header class="page-head">
+        <div>
+          <h1>sources</h1>
+          <span class="hint">where onidoku finds your comics and novels: your own media servers, and sites you read.</span>
+        </div>
+        <button id="add-source" class="primary" type="button">+ add source</button>
+      </header>
+
+      <section class="source-section" aria-labelledby="servers-heading">
+        <div class="section-head">
+          <h2 id="servers-heading">media servers</h2>
+          <span id="servers-count" class="count-pill"></span>
+        </div>
+        <ul id="servers" class="configs"></ul>
+        <div id="servers-empty" class="empty-row" hidden>
+          <p class="hint">read the comics, manga and books on your own Komga or Kavita server, with progress synced both ways.</p>
+          <button id="add-server-open" class="secondary" type="button">connect a server</button>
+        </div>
+      </section>
+
+      <section class="source-section" aria-labelledby="sites-heading">
+        <div class="section-head">
+          <h2 id="sites-heading">sites</h2>
+          <span id="sites-count" class="count-pill"></span>
+          <input id="sites-filter" class="section-filter" type="search" placeholder="filter sites" aria-label="filter sites" hidden />
+        </div>
+        <ul id="configs" class="configs"></ul>
+        <p id="none" class="hint empty-row" hidden>
+          no sites yet. sites are plain JSON configs with CSS selectors, never code: install a suggested one below, or add your own.
+        </p>
+        <p id="sites-no-match" class="hint" hidden>no sites match.</p>
+      </section>
+
+      <section id="paperback-section" class="source-section" aria-labelledby="paperback-heading" hidden>
+        <div class="section-head">
+          <h2 id="paperback-heading">paperback sources</h2>
+          <span id="paperback-count" class="count-pill"></span>
+        </div>
+        <ul id="paperback" class="configs"></ul>
+        <div id="paperback-empty" class="empty-row" hidden>
+          <p class="hint">use sources from Paperback extension repos. they’re code, so each runs in its own sandbox with no access to the rest of onidoku.</p>
+          <button id="add-paperback-open" class="secondary" type="button">add a Paperback repo</button>
+        </div>
+      </section>
+
+      <section id="featured-section" class="source-section" hidden>
+        <div class="section-head"><h2>suggested</h2></div>
+        <p class="hint">sites whose works are in the public domain or openly licensed for sharing.</p>
+        <ul id="featured" class="configs"></ul>
+      </section>
+
+      <section class="source-section">
+        <div class="section-head"><h2>settings</h2></div>
+        <label class="check setting">
+          <input id="show-nsfw" type="checkbox" />
+          <span>show 18+ sources in search <span class="hint">(they always work for series already in your library)</span></span>
+        </label>
+        <label class="check setting">
+          <input id="read-in-onidoku" type="checkbox" />
+          <span>open chapters in onidoku instead of on the site
+            <span class="hint">(from the library and details pages; loads without the site’s ads and scripts, but pages a site builds with scripts may not show)</span></span>
+        </label>
+        <label class="check setting">
+          <input id="detect-everywhere" type="checkbox" />
+          <span>offer the reader on chapter pages of any site
+            <span class="hint">(needs access to all sites; pages are checked on your device and nothing is sent anywhere)</span></span>
+        </label>
+      </section>
+    </main>
+
+    <dialog id="add-dialog" class="add-dialog" aria-labelledby="add-title">
+      <header class="dialog-head">
+        <h2 id="add-title">add a source</h2>
+        <button id="add-close" class="icon-button" type="button" aria-label="close">✕</button>
+      </header>
+      <div class="tabs" role="tablist" aria-label="how to add">
+        <button class="tab" type="button" role="tab" data-panel="server" aria-selected="true">media server</button>
+        <button class="tab" type="button" role="tab" data-panel="url" aria-selected="false">site from URL</button>
+        <button class="tab" type="button" role="tab" data-panel="json" aria-selected="false">paste site JSON</button>
+        <button id="paperback-tab" class="tab" type="button" role="tab" data-panel="paperback" aria-selected="false" hidden>Paperback repo</button>
+      </div>
+
+      <form id="add-server" class="dialog-panel" data-panel="server">
+        <div class="field-row">
+          <label class="field">server
+            <select id="server-kind">
+              <option value="komga">Komga</option>
+              <option value="kavita">Kavita</option>
+            </select>
+          </label>
+          <label class="field grow">address
+            <input id="server-url" type="url" placeholder="http://192.168.1.5:25600" required />
+          </label>
+        </div>
+        <label class="field">API key
+          <input id="server-key" type="password" autocomplete="off" spellcheck="false" />
+          <span id="server-key-hint" class="hint"></span>
+        </label>
+        <div id="komga-login" class="field-row">
+          <label class="field grow">or username
+            <input id="server-user" type="text" autocomplete="username" spellcheck="false" />
+          </label>
+          <label class="field grow">and password
+            <input id="server-password" type="password" autocomplete="current-password" />
+          </label>
+        </div>
+        <label class="field">name <span class="hint">(optional)</span>
+          <input id="server-name" type="text" placeholder="home server" maxlength="80" />
+        </label>
+        <div class="dialog-actions"><button class="primary" type="submit">connect</button></div>
+      </form>
+
+      <form id="from-url" class="dialog-panel" data-panel="url" hidden>
+        <label class="field">config URL
+          <input id="url" type="url" placeholder="https://example.org/configs/some-site.json" required />
+          <span class="hint">the address of a site config's JSON file. if the download is blocked, open it and paste the JSON instead.</span>
+        </label>
+        <div class="dialog-actions"><button class="primary" type="submit">install</button></div>
+      </form>
+
+      <form id="from-json" class="dialog-panel" data-panel="json" hidden>
+        <label class="field">site config JSON
+          <textarea id="json" spellcheck="false" placeholder='{ "schema": 1, "id": "…", … }' required></textarea>
+        </label>
+        <p id="json-check" class="hint" aria-live="polite"></p>
+        <div class="dialog-actions"><button class="primary" type="submit">install</button></div>
+      </form>
+
+      <form id="from-paperback" class="dialog-panel" data-panel="paperback" hidden>
+        <div class="field-row">
+          <label class="field grow">repo address
+            <input id="paperback-url" type="url" placeholder="https://someone.github.io/extensions/0.8" required />
+          </label>
+        </div>
+        <span class="hint">a Paperback 0.8 extension repo, the address you’d add in Paperback. its sources are code written by the repo’s authors: each runs sandboxed, and needs access to all sites to load from wherever its site keeps pages and images.</span>
+        <div class="dialog-actions"><button class="primary" type="submit">list sources</button></div>
+        <ul id="paperback-listing" class="configs" aria-live="polite"></ul>
+      </form>
+
+      <p id="dialog-message" class="error" role="alert" hidden></p>
+    </dialog>
+
+    <div id="message" class="toast" role="status" hidden></div>
+    <script src="options.js"></script>
+  </body>
+</html>

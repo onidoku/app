@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>onidoku</title>
+    <link rel="stylesheet" href="ui.css" />
+  </head>
+  <body class="popup">
+    <header class="pop-bar">
+      <img class="pop-logo" src="icons/logo.svg" alt="" width="26" height="26" />
+      <strong class="pop-brand">onidoku</strong>
+      <span id="bar-actions" class="pop-bar-actions"></span>
+    </header>
+    <form id="search" class="pop-search" role="search">
+      <input id="search-input" type="search" placeholder="search your sources" aria-label="search your sources" autocomplete="off" />
+    </form>
+    <main class="pop-main">
+      <section id="page" class="pop-card" hidden></section>
+      <section class="pop-section">
+        <header class="pop-section-head">
+          <h2 id="library-heading">continue reading</h2>
+          <button id="open-library" class="pop-pill" type="button">open library</button>
+        </header>
+        <ul id="library" class="pop-list"></ul>
+        <div id="empty" class="pop-empty" hidden></div>
+      </section>
+    </main>
+    <p id="status" class="pop-status" role="status" hidden></p>
+    <nav id="tabs" class="pop-tabs" aria-label="onidoku pages"></nav>
+    <script src="popup.js"></script>
+  </body>
+</html>

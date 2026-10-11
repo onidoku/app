@@ -1,0 +1,25 @@
+{
+  "name": "onidoku",
+  "private": true,
+  "license": "FSL-1.1-MIT",
+  "type": "module",
+  "scripts": {
+    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "site": "node apps/test-site/server.mjs",
+    "ext:dev": "pnpm --filter @onidoku/extension dev",
+    "ext:build": "pnpm --filter @onidoku/extension build",
+    "test:e2e": "pnpm --filter @onidoku/extension test:e2e",
+    "try-config": "tsx tools/try-config.ts",
+    "ext:package": "pnpm --filter @onidoku/extension package"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@onidoku/core": "workspace:*",
+    "linkedom": "^0.18.13",
+    "tsx": "^4.23.15"
+  },
+  "packageManager": "pnpm@11.17.0"
+}

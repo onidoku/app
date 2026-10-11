@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "id": "testsite.manga",
+  "name": "Test Site (comics)",
+  "version": 1,
+  "icon": "http://localhost:4173/static/logo.svg",
+  "developer": "onidoku",
+  "nsfw": false,
+  "series": {
+    "url": "http://localhost:4173/series/*",
+    "title": "h1.series-title",
+    "cover": "img.cover",
+    "description": ".synopsis",
+    "authors": "a.author",
+    "genres": "ul.genres li",
+    "status": ".status",
+    "chapters": { "item": "ul.chapter-list li a", "title": ".chapter-name", "order": "newest-first" }
+  },
+  "chapter": {
+    "url": "http://localhost:4173/series/*/chapter/*",
+    "title": "h1.chapter-title",
+    "pages": ".reader img",
+    "next": "a.next",
+    "prev": "a.prev",
+    "series": "a.back"
+  },
+  "browse": {
+    "authors": { "url": "http://localhost:4173/author/{slug}", "item": "ul.results li", "title": ".name" },
+    "genres": { "url": "http://localhost:4173/genre/{slug}?kind=manga", "item": "ul.results li", "title": ".name" }
+  },
+  "explore": [
+    { "name": "Popular", "url": "http://localhost:4173/popular?kind=manga&page={page}", "item": "ul.results li", "title": ".name" },
+    { "name": "Latest", "url": "http://localhost:4173/latest?kind=manga&page={page}", "item": "ul.results li", "title": ".name" }
+  ],
+  "search": {
+    "url": "http://localhost:4173/search?kind=manga&q={query}",
+    "item": "ul.results li",
+    "title": ".name"
+  }
+}

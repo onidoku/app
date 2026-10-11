@@ -1,0 +1,16 @@
+{
+  "name": "@onidoku/test-site",
+  "version": "0.1.0",
+  "license": "FSL-1.1-MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@onidoku/core": "workspace:*",
+    "linkedom": "^0.18.13",
+    "vitest": "^5.0.3"
+  }
+}

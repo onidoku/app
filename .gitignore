@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.zip
+test-results/
+playwright-report/
+release/
+dist-firefox/
+
+examples/
+
+# chrome "pack extension" output: the .pem is a private signing key
+*.pem
+*.crx

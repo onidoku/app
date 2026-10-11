@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "id": "testsite.novel",
+  "name": "Test Site (novels)",
+  "version": 1,
+  "icon": "http://localhost:4173/static/logo.svg",
+  "developer": "onidoku",
+  "nsfw": false,
+  "series": {
+    "url": "http://localhost:4173/novel/*",
+    "title": "h1.series-title",
+    "cover": "img.cover",
+    "description": ".synopsis",
+    "authors": "a.author",
+    "genres": "ul.genres li",
+    "status": ".status",
+    "chapters": { "item": "ul.chapter-list li a", "title": ".chapter-name" }
+  },
+  "chapter": {
+    "url": "http://localhost:4173/novel/*/chapter/*",
+    "title": "h1.chapter-title",
+    "text": "article.chapter-text",
+    "next": "a.next",
+    "prev": "a.prev",
+    "series": "a.back"
+  },
+  "browse": {
+    "authors": { "url": "http://localhost:4173/author/{slug}", "item": "ul.results li", "title": ".name" },
+    "genres": { "url": "http://localhost:4173/genre/{slug}?kind=novel", "item": "ul.results li", "title": ".name" }
+  },
+  "explore": [
+    { "name": "Popular", "url": "http://localhost:4173/popular?kind=novel&page={page}", "item": "ul.results li", "title": ".name" },
+    { "name": "Latest", "url": "http://localhost:4173/latest?kind=novel&page={page}", "item": "ul.results li", "title": ".name" }
+  ],
+  "search": {
+    "url": "http://localhost:4173/search?kind=novel&q={query}",
+    "item": "ul.results li",
+    "title": ".name"
+  }
+}

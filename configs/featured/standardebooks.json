@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "id": "standardebooks",
+  "name": "Standard Ebooks",
+  "version": 1,
+  "icon": "https://standardebooks.org/favicon.ico",
+  "developer": "onidoku",
+  "nsfw": false,
+  "series": {
+    "url": "https://standardebooks.org/ebooks/*/*",
+    "title": "h1[property='schema:name']",
+    "cover": { "selector": "meta[property='og:image']", "attr": "content" },
+    "description": "div[property='schema:description']",
+    "authors": "a[property='schema:author'] [property='schema:name']",
+    "genres": "ul.tags a",
+    "chapters": {
+      "item": "#toc a:not([href$='titlepage']):not([href$='halftitlepage']):not([href$='imprint']):not([href$='colophon']):not([href$='uncopyright'])",
+      "order": "oldest-first",
+      "from": { "template": "{url}/text" }
+    }
+  },
+  "chapter": {
+    "url": "https://standardebooks.org/ebooks/*/*/text/*",
+    "title": "title",
+    "text": "main",
+    "next": "footer a[rel=next]",
+    "prev": "footer a[rel=prev]",
+    "series": "header nav li:nth-child(2) a"
+  },
+  "explore": [
+    { "name": "Popular", "url": "https://standardebooks.org/ebooks?sort=popularity&page={page}", "item": "ol.ebooks-list > li", "title": "[property='schema:name']", "cover": "img" },
+    { "name": "Newest", "url": "https://standardebooks.org/ebooks?sort=newest&page={page}", "item": "ol.ebooks-list > li", "title": "[property='schema:name']", "cover": "img" }
+  ],
+  "search": {
+    "url": "https://standardebooks.org/ebooks?query={query}",
+    "item": "ol.ebooks-list > li",
+    "title": "[property='schema:name']",
+    "cover": "img"
+  }
+}

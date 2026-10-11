@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "id": "testsite.lazy",
+  "name": "Test Site (lazy loading)",
+  "version": 1,
+  "icon": "http://localhost:4173/static/logo.svg",
+  "developer": "onidoku",
+  "nsfw": false,
+  "series": {
+    "url": "http://localhost:4173/lazy/*",
+    "title": "h1.series-title",
+    "cover": "img.cover",
+    "chapters": {
+      "item": "a.ch",
+      "title": ".name",
+      "order": "newest-first",
+      "from": { "selector": "button.show-all", "attr": "hx-get" }
+    }
+  },
+  "chapter": {
+    "url": "http://localhost:4173/lazy/*/chapter/*",
+    "title": "h1.chapter-title",
+    "pages": "img",
+    "from": { "template": "{url}/images" },
+    "series": "a.back"
+  },
+  "explore": [
+    { "name": "Popular", "url": "http://localhost:4173/popular?kind=lazy&page={page}", "item": "ul.results li", "title": ".name" },
+    { "name": "Latest", "url": "http://localhost:4173/latest?kind=lazy&page={page}", "item": "ul.results li", "title": ".name" }
+  ],
+  "search": {
+    "url": "http://localhost:4173/search?kind=lazy&q={query}",
+    "item": "ul.results li",
+    "title": ".name"
+  }
+}

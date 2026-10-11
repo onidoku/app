@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "id": "peppercarrot.en",
+  "name": "Pepper&Carrot (English)",
+  "version": 1,
+  "icon": "https://www.peppercarrot.com/core/img/favicon.png",
+  "developer": "onidoku",
+  "nsfw": false,
+  "series": {
+    "url": "https://www.peppercarrot.com/en/webcomics/*",
+    "title": ".teaser h2",
+    "cover": { "selector": "meta[property='og:image']", "attr": "content" },
+    "description": ".teaser .text-glow",
+    "chapters": { "item": "figure.thumbnail figcaption a", "order": "newest-first" }
+  },
+  "chapter": {
+    "url": "https://www.peppercarrot.com/en/webcomic/*",
+    "title": "title",
+    "pages": ".webcomic-page img",
+    "next": "a.nav-next:not(.off)",
+    "prev": "a.nav-prev:not(.off)",
+    "series": "a.navigation-btn[title='All thumbnails']"
+  }
+}
