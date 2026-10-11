@@ -11,7 +11,8 @@
     "ext:build": "pnpm --filter @onidoku/extension build",
     "test:e2e": "pnpm --filter @onidoku/extension test:e2e",
     "try-config": "tsx tools/try-config.ts",
-    "ext:package": "pnpm --filter @onidoku/extension package"
+    "ext:package": "pnpm --filter @onidoku/extension package",
+    "site:serve": "npx serve apps/site"
   },
   "engines": {
     "node": ">=22"

@@ -2,14 +2,14 @@
   "schema": 1,
   "id": "peppercarrot.en",
   "name": "Pepper&Carrot (English)",
-  "version": 1,
+  "version": 2,
   "icon": "https://www.peppercarrot.com/core/img/favicon.png",
   "developer": "onidoku",
   "nsfw": false,
   "series": {
     "url": "https://www.peppercarrot.com/en/webcomics/*",
     "title": ".teaser h2",
-    "cover": { "selector": "meta[property='og:image']", "attr": "content" },
+    "cover": { "selector": "figure.thumbnail img", "attr": "src" },
     "description": ".teaser .text-glow",
     "chapters": { "item": "figure.thumbnail figcaption a", "order": "newest-first" }
   },

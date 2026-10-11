@@ -65,6 +65,7 @@ packages/core     shared TypeScript: site-config format, extraction, library, up
                   no browser APIs, so it can also run in an Android WebView/QuickJS later.
 apps/extension    MV3 extension for Chrome and Firefox (popup, in-page reader, background update checks).
 apps/test-site    fake comic + novel site on localhost:4173 for testing. generated content only.
+apps/site         the website (onidoku.github.io/app): plain HTML and CSS, no build step.
 configs/          site configs for the test site (bundled into dev builds only).
 ```
 
@@ -122,6 +123,17 @@ it also writes `onidoku-source-<version>.zip` for AMO, which asks for the source
 the "source code" step and give reviewers these build steps: Node 22+, pnpm 11 (`corepack enable`), then
 `pnpm install --frozen-lockfile && pnpm ext:package`; the Firefox build lands in `apps/extension/dist-firefox/`.
 for the listing, AMO's icon is taken from the manifest; `apps/extension/art/store/` has larger renders for other stores.
+
+### website
+
+`apps/site/` is published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main` that
+touches it (one-time setup: **Settings → Pages → Source: GitHub Actions**). to preview it, serve the folder,
+e.g. `python3 -m http.server -d apps/site`.
+
+its screenshots are real: `pnpm --filter @onidoku/extension shots` builds the release extension, adds
+Pepper&Carrot and a few Standard Ebooks titles, and captures each page in light and dark as WebP in
+`apps/site/img/`, plus the social preview `og.png`. it needs network access and `cwebp`. pass names to
+retake only some, e.g. `shots library popup og`.
 
 ### icons
 

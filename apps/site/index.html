@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>onidoku · read like a demon</title>
+  <meta name="description" content="one clean reader, one library and new-chapter alerts for every comic and novel you follow, right in your browser. no ads, no clutter, no account." />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#6d4aff" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="onidoku · read like a demon" />
+  <meta property="og:description" content="one clean reader, one library and new-chapter alerts for every comic and novel you follow, right in your browser." />
+  <meta property="og:url" content="https://onidoku.github.io/app/" />
+  <meta property="og:image" content="https://onidoku.github.io/app/img/og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon.png" type="image/png" sizes="32x32" />
+  <link rel="preload" href="fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="skip" href="#main">skip to content</a>
+
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top" aria-label="onidoku home">
+        <img src="logo.svg" width="32" height="32" alt="" />
+        <span>onidoku</span>
+      </a>
+      <nav aria-label="sections">
+        <a href="#reader">reader</a>
+        <a href="#library">library</a>
+        <a href="#sources">sources</a>
+        <a href="#privacy">privacy</a>
+      </nav>
+      <a class="btn btn-small" href="#get">get onidoku</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- hero -->
+    <section class="hero" id="top">
+      <div class="kanji-bg" aria-hidden="true">鬼読</div>
+      <div class="wrap hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow">a browser extension for comics and novels</p>
+          <h1>read like<br /><span class="accent-text">a demon.</span></h1>
+          <p class="lede">one clean reader, one library and new-chapter alerts for every comic and novel you follow, right in your browser. no ads, no clutter, no account.</p>
+          <div class="cta">
+            <a class="btn" href="#get">get onidoku</a>
+            <a class="btn btn-ghost" href="https://github.com/onidoku/app">
+              <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+              source on GitHub
+            </a>
+          </div>
+          <p class="platforms">Chrome · Edge · Firefox · Firefox for Android</p>
+        </div>
+
+        <div class="hero-visual">
+          <figure class="browser">
+            <div class="browser-bar" aria-hidden="true">
+              <span class="dots"><i></i><i></i><i></i></span>
+              <span class="url">peppercarrot.com/en/webcomic/ep01_Potion-of-Flight</span>
+              <img class="ext-icon" src="favicon.png" width="16" height="16" alt="" />
+            </div>
+            <img src="img/reader-comic.webp" width="2560" height="1600" alt="the onidoku reader showing Pepper&amp;Carrot episode 1 as one long strip, with chapter navigation in a slim toolbar" fetchpriority="high" />
+          </figure>
+          <picture class="popup-float">
+            <source srcset="img/popup-dark.webp" media="(prefers-color-scheme: dark)" />
+            <img src="img/popup-light.webp" width="720" height="1160" alt="the onidoku popup: continue reading, with unread counts and the next chapter for each series" />
+          </picture>
+        </div>
+      </div>
+    </section>
+
+    <!-- the problem -->
+    <section class="problem">
+      <div class="wrap narrow">
+        <p>you follow a webcomic on its own site, a web novel somewhere else, and your own collection on a Komga or Kavita server. that's three tabs, three bookmark folders and no idea which one updated today.</p>
+        <p class="punch">onidoku pulls them into one place.</p>
+      </div>
+    </section>
+
+    <!-- reader -->
+    <section class="feature" id="reader">
+      <div class="wrap split">
+        <div class="copy">
+          <p class="eyebrow">✦ the reader</p>
+          <h2>a reader that gets out of the way</h2>
+          <p>no sidebars, pop-ups or autoplaying ads. just the pages, or just the words.</p>
+          <ul class="checks">
+            <li><b>comics your way:</b> long-strip scrolling or page by page, fit to width or height.</li>
+            <li><b>novels your way:</b> light, dark and sepia, with the fonts and spacing you like.</li>
+            <li><b>works on almost any chapter page,</b> even sites onidoku has never seen. it finds the images or text on its own.</li>
+            <li><b>read without the site:</b> open a chapter on onidoku's own page, with none of the site's scripts or ads.</li>
+          </ul>
+          <div class="keys" aria-label="keyboard shortcuts">
+            <span><kbd>N</kbd><kbd>P</kbd> chapters</span>
+            <span><kbd>←</kbd><kbd>→</kbd> pages</span>
+            <span><kbd>C</kbd> chapter list</span>
+            <span><kbd>S</kbd> settings</span>
+            <span><kbd>?</kbd> the rest</span>
+          </div>
+        </div>
+        <div class="media">
+          <div class="tabs" aria-label="reader examples">
+            <input type="radio" name="reader-tab" id="tab-novel" checked />
+            <label for="tab-novel">novel</label>
+            <input type="radio" name="reader-tab" id="tab-comic" />
+            <label for="tab-comic">comic</label>
+          </div>
+          <div class="shot tab-shots">
+            <img class="tab-novel" src="img/reader-novel.webp" width="2560" height="1600" loading="lazy" decoding="async" alt="Pride and Prejudice chapter 1 in the reader's sepia theme, set in a large serif" />
+            <img class="tab-comic" src="img/reader-comic.webp" width="2560" height="1600" loading="lazy" decoding="async" alt="Pepper&amp;Carrot in the reader's long-strip mode on a black backdrop" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- library -->
+    <section class="feature alt" id="library">
+      <div class="wrap split reverse">
+        <div class="copy">
+          <p class="eyebrow">✦ the library</p>
+          <h2>one library for everything</h2>
+          <p>every series you follow, from every site and server, on one shelf. pick up exactly where you left off.</p>
+          <ul class="checks">
+            <li><b>add any series in one click</b> from the toolbar.</li>
+            <li><b>filter and sort:</b> new chapters, reading, not started, caught up.</li>
+            <li><b>see your progress</b> on every cover, and what's next in the popup.</li>
+            <li><b>one-click backup and restore,</b> to a file you keep.</li>
+          </ul>
+        </div>
+        <div class="media">
+          <picture class="shot">
+            <source srcset="img/library-dark.webp" media="(prefers-color-scheme: dark)" />
+            <img src="img/library-light.webp" width="2240" height="1440" loading="lazy" decoding="async" alt="the library page: a grid of covers with unread counts and reading progress, and filters for new chapters, reading, not started and caught up" />
+          </picture>
+        </div>
+      </div>
+    </section>
+
+    <!-- explore -->
+    <section class="feature" id="explore">
+      <div class="wrap split">
+        <div class="copy">
+          <p class="eyebrow">✦ explore and search</p>
+          <h2>find your next read without leaving</h2>
+          <p>search across every source you've added at once, or browse each one's popular and latest lists. open any title to see its chapters and start reading, no need to add it first.</p>
+        </div>
+        <div class="media">
+          <picture class="shot">
+            <source srcset="img/explore-dark.webp" media="(prefers-color-scheme: dark)" />
+            <img src="img/explore-light.webp" width="2240" height="1440" loading="lazy" decoding="async" alt="the explore page showing Standard Ebooks' popular list as a grid of book covers, with titles already in the library ticked" />
+          </picture>
+        </div>
+      </div>
+    </section>
+
+    <!-- alerts -->
+    <section class="feature alt" id="alerts">
+      <div class="wrap split reverse">
+        <div class="copy">
+          <p class="eyebrow">✦ alerts</p>
+          <h2>never miss a chapter</h2>
+          <p>onidoku checks your whole library in the background, and tells you the moment something new drops.</p>
+          <ul class="checks">
+            <li><b>notifications</b> for new chapters, on every desktop browser.</li>
+            <li><b>a badge count</b> on the toolbar icon, so you know at a glance.</li>
+            <li><b>new chapters first</b> in the library and popup.</li>
+          </ul>
+        </div>
+        <div class="media alerts-visual" aria-hidden="true">
+          <div class="toolbar">
+            <span class="tb-url"></span>
+            <span class="tb-icon"><img src="favicon.png" width="20" height="20" alt="" /><b>3</b></span>
+          </div>
+          <div class="toast">
+            <img src="logo.svg" width="44" height="44" alt="" />
+            <div>
+              <strong>new chapter: Pepper&amp;Carrot</strong>
+              <span>Episode 40 is out.</span>
+            </div>
+          </div>
+          <div class="toast toast-2">
+            <img src="logo.svg" width="44" height="44" alt="" />
+            <div>
+              <strong>2 new chapters: Dracula</strong>
+              <span>XXVI and XXVII.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- sources -->
+    <section class="feature" id="sources">
+      <div class="wrap split">
+        <div class="copy">
+          <p class="eyebrow">✦ sources</p>
+          <h2>any site, your choice</h2>
+          <p>onidoku ships with <b>no sources installed</b>. you decide which sites it works with:</p>
+          <ul class="checks">
+            <li><b>install a suggested source</b> for public-domain and openly licensed sites like Standard Ebooks and Pepper&amp;Carrot.</li>
+            <li><b>write your own in minutes:</b> a source is a small JSON file of CSS selectors. no code.</li>
+            <li><b>or run community Paperback sources</b> on Chrome and Edge, each one safely sandboxed.</li>
+          </ul>
+          <a class="more" href="https://github.com/onidoku/app/blob/main/docs/writing-sources.md">read the guide to writing sources →</a>
+        </div>
+        <div class="media">
+          <figure class="code" aria-label="an example source file">
+            <div class="code-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>peppercarrot-en.json</span></div>
+<pre><code>{
+  <span class="k">"name"</span>: <span class="s">"Pepper&amp;Carrot (English)"</span>,
+  <span class="k">"series"</span>: {
+    <span class="k">"url"</span>: <span class="s">"https://www.peppercarrot.com/en/webcomics/*"</span>,
+    <span class="k">"title"</span>: <span class="s">".teaser h2"</span>,
+    <span class="k">"cover"</span>: { <span class="k">"selector"</span>: <span class="s">"figure.thumbnail img"</span>, <span class="k">"attr"</span>: <span class="s">"src"</span> },
+    <span class="k">"chapters"</span>: { <span class="k">"item"</span>: <span class="s">"figcaption a"</span>, <span class="k">"order"</span>: <span class="s">"newest-first"</span> }
+  },
+  <span class="k">"chapter"</span>: {
+    <span class="k">"url"</span>: <span class="s">"https://www.peppercarrot.com/en/webcomic/*"</span>,
+    <span class="k">"pages"</span>: <span class="s">".webcomic-page img"</span>,
+    <span class="k">"next"</span>: <span class="s">"a.nav-next:not(.off)"</span>
+  }
+}</code></pre>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- servers -->
+    <section class="feature alt" id="servers">
+      <div class="wrap split reverse">
+        <div class="copy">
+          <p class="eyebrow">✦ media servers</p>
+          <h2>bring your own server</h2>
+          <p>browse and read your <a href="https://komga.org">Komga</a> and <a href="https://www.kavitareader.com">Kavita</a> libraries right next to everything else: comics, CBZ/CBR, PDF and EPUB.</p>
+          <ul class="checks">
+            <li><b>progress syncs both ways:</b> read in onidoku, and the server knows. read in the server's apps, and onidoku knows.</li>
+            <li><b>new books and chapters</b> show up in your alerts like any other source.</li>
+          </ul>
+        </div>
+        <div class="media">
+          <picture class="shot">
+            <source srcset="img/sources-dark.webp" media="(prefers-color-scheme: dark)" />
+            <img src="img/sources-light.webp" width="2240" height="1440" loading="lazy" decoding="async" alt="the sources page: connect a Komga or Kavita server, installed sites, Paperback sources and settings" />
+          </picture>
+        </div>
+      </div>
+    </section>
+
+    <!-- privacy -->
+    <section class="privacy" id="privacy">
+      <div class="wrap">
+        <p class="eyebrow center">✦ yours, and only yours</p>
+        <h2 class="center">no ads. no account. no tracking.</h2>
+        <div class="grid">
+          <div class="card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+            <h3>your data stays in your browser</h3>
+            <p>your library, progress and settings live in the extension's own storage. nothing is sent to us.</p>
+          </div>
+          <div class="card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/><path d="M3 3l18 18"/></svg>
+            <h3>no account, ever</h3>
+            <p>install it and start reading. there's nothing to sign up for.</p>
+          </div>
+          <div class="card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/><path d="M8 14l3 3 5-5"/></svg>
+            <h3>nothing hosted or unlocked</h3>
+            <p>onidoku shows what the site already shows you, the way it should have looked. it never mirrors content or gets around paywalls.</p>
+          </div>
+          <div class="card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7l-5 5 5 5"/><path d="M16 7l5 5-5 5"/><path d="M14 4l-4 16"/></svg>
+            <h3>source available</h3>
+            <p>every line is <a href="https://github.com/onidoku/app">on GitHub</a>. read what it does with the access it asks for.</p>
+          </div>
+          <div class="card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>
+            <h3>backup in one click</h3>
+            <p>export your library to a file, and import it on any browser. importing merges and never deletes.</p>
+          </div>
+          <div class="card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+            <h3>sandboxed sources</h3>
+            <p>sources are data, not code. Paperback sources, which are code, each run in their own locked-down sandbox.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- name -->
+    <section class="name">
+      <div class="wrap narrow">
+        <div class="glyphs" aria-hidden="true">
+          <span><b>鬼</b><small>oni</small></span>
+          <i>+</i>
+          <span><b>読</b><small>doku</small></span>
+        </div>
+        <h2 class="center">why “onidoku”?</h2>
+        <p class="center"><em>onidoku</em> is a made-up Japanese word: 鬼 (<em>oni</em>, demon, and in slang "extremely") plus 読 (<em>doku</em>, reading). reading, turned all the way up.</p>
+      </div>
+    </section>
+
+    <!-- get -->
+    <section class="get" id="get">
+      <div class="wrap narrow center">
+        <img src="logo.svg" width="96" height="96" alt="" />
+        <h2>start reading like a demon.</h2>
+        <p>onidoku is coming to the Chrome Web Store, Edge Add-ons and Firefox Add-ons. until then, you can build it from source.</p>
+        <div class="cta center">
+          <span class="btn btn-soon" aria-disabled="true">Chrome &amp; Edge · soon</span>
+          <span class="btn btn-soon" aria-disabled="true">Firefox · soon</span>
+          <a class="btn btn-ghost" href="https://github.com/onidoku/app#setup">build from source</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <div class="brand">
+        <img src="logo.svg" width="24" height="24" alt="" />
+        <span>onidoku</span>
+      </div>
+      <nav aria-label="footer">
+        <a href="https://github.com/onidoku/app">GitHub</a>
+        <a href="https://github.com/onidoku/app/blob/main/CONTENT_POLICY.md">content policy</a>
+        <a href="https://github.com/onidoku/app/blob/main/LICENSE">license</a>
+        <a href="mailto:onidoku@proton.me">contact</a>
+      </nav>
+      <p class="credits">screenshots show <a href="https://www.peppercarrot.com">Pepper&amp;Carrot</a> by David Revoy (<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>) and public-domain books from <a href="https://standardebooks.org">Standard Ebooks</a>. onidoku isn't affiliated with either.</p>
+    </div>
+  </footer>
+</body>
+</html>
