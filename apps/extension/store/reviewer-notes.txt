@@ -1,0 +1,12 @@
+The uploaded add-on is minified by esbuild. To rebuild it from the attached source:
+Node 22+, pnpm 11 (`corepack enable`), then `pnpm install --frozen-lockfile && pnpm ext:package`.
+The Firefox build is in apps/extension/dist-firefox/ (zipped as apps/extension/release/onidoku-firefox-<version>.zip).
+
+onidoku ships with no site configs installed. Users add sources themselves; the Sources page suggests only openly licensed sites (Standard Ebooks, Pepper&Carrot). Configs are JSON data (CSS selectors), never code. The Firefox build leaves out Paperback sources (downloaded code), which only exist in the Chrome build.
+
+Data: nothing is sent to the developer. Library, progress and settings stay in extension storage. Requests go only to sites the user added as sources, and to Komga/Kavita servers the user connects; their login (API key, or username and password) is stored locally and sent only to that server.
+
+To try it: Sources → install "Standard Ebooks" from the suggested list → explore → open a book → start reading.
+
+Content policy: https://github.com/onidoku/app/blob/main/CONTENT_POLICY.md
+Privacy policy: https://onidoku.github.io/privacy.html

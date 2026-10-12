@@ -1,0 +1,33 @@
+# Attaches the Mozilla-signed .xpi to a GitHub release, once AMO has approved that version.
+# Run it from the Actions tab with the release tag (e.g. v0.1.0).
+name: firefox signed xpi
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: release tag, e.g. v0.1.0
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download the signed file from addons.mozilla.org
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          version="${TAG#v}"
+          api="https://addons.mozilla.org/api/v5/addons/addon/onidoku%40proton.me/versions/$version/"
+          url=$(curl -fsS "$api" | jq -r '.file.url // empty') || true
+          [ -n "$url" ] || { echo "::error::version $version isn't approved on AMO yet (or doesn't exist)"; exit 1; }
+          curl -fsSL "$url" -o "onidoku-firefox-$version-signed.xpi"
+          echo "FILE=onidoku-firefox-$version-signed.xpi" >> "$GITHUB_ENV"
+      - name: Attach it to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: gh release upload "$TAG" "$FILE" --clobber --repo "$GITHUB_REPOSITORY"

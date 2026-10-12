@@ -1,0 +1,34 @@
+read like a demon.
+
+you follow a webcomic on its own site, a web novel somewhere else, and your own collection on a Komga or Kavita server. that's three tabs, three bookmark folders and no idea which one updated today. onidoku pulls them into one place.
+
+✦ a reader that gets out of the way
+• distraction-free reading for comics and novels: no sidebars, pop-ups or autoplaying ads.
+• comics your way: long-strip scrolling or page by page, fit to width or height.
+• novels your way: light, dark and sepia themes, with the fonts and spacing you like.
+• keyboard-first: N / P for chapters, arrow keys for pages, C for the chapter list, ? for the rest.
+• works on almost any chapter page, even sites onidoku has never seen: it finds the images or text on its own.
+• read without the site: open a chapter on onidoku's own page, with none of the site's scripts or ads.
+
+✦ one library for everything
+• add any series in one click from the toolbar, and pick up exactly where you left off.
+• search and explore across every source you've added: popular lists, latest updates, all in one place.
+• bring your own server: browse and read your Komga and Kavita libraries (comics, CBZ/CBR, PDF and EPUB), with read progress synced back to the server.
+
+✦ never miss a chapter
+• background checks for new chapters across your whole library.
+• notifications and a badge count the moment something new drops.
+
+✦ any site, your choice
+onidoku ships with no sources installed, and you decide which sites it works with:
+• install a suggested source for public-domain and openly licensed sites like Standard Ebooks and Pepper&Carrot,
+• or write your own in minutes: a source is a small JSON file of CSS selectors, no code.
+
+nothing is hosted, mirrored or unlocked: onidoku shows what the site already shows you, the way it should have looked.
+
+✦ yours, and only yours
+• no account, no ads, no tracking. nothing is sent to us.
+• your library, progress and settings stay in your browser, with one-click backup and restore.
+• source available: https://github.com/onidoku/app
+
+website: https://onidoku.github.io

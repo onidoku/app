@@ -121,7 +121,8 @@ no source maps; Firefox must pass `web-ext lint`), and writes `apps/extension/re
 it also writes `onidoku-source-<version>.zip` for AMO, which asks for the source of minified add-ons: upload it on
 the "source code" step and give reviewers these build steps: Node 22+, pnpm 11 (`corepack enable`), then
 `pnpm install --frozen-lockfile && pnpm ext:package`; the Firefox build lands in `apps/extension/dist-firefox/`.
-for the listing, AMO's icon is taken from the manifest; `apps/extension/art/store/` has larger renders for other stores.
+for the listings, `apps/extension/store/` has the text, form answers, icons and screenshots for every store
+(see its README).
 
 ### website
 
@@ -136,7 +137,8 @@ it needs network access and `cwebp`. pass names to retake only some, e.g. `shots
 ### icons
 
 the logo lives in `apps/extension/art/` (`logo.svg`, plus `logo-small.svg`, zoomed in a little, for 16/32 px).
-after editing them, run `pnpm --filter @onidoku/extension icons` to re-render `static/icons/`.
+after editing them, run `pnpm --filter @onidoku/extension icons` to re-render `static/icons/` and the store icons
+in `store/images/`.
 
 ### trying real sites
 
