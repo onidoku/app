@@ -13,6 +13,7 @@
     "test:e2e": "node build.mjs --dev && playwright test",
     "package": "node scripts/package.mjs",
     "shots": "node scripts/site-shots.mjs",
+    "store-shots": "node scripts/store-shots.mjs",
     "build:firefox": "node build.mjs --target=firefox",
     "dev:firefox": "node build.mjs --target=firefox --watch",
     "firefox": "web-ext run --source-dir dist-firefox --start-url http://localhost:4173",

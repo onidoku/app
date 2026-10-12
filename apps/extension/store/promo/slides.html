@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>onidoku store slides</title>
+  <link rel="stylesheet" href="slides.css" />
+</head>
+<!--
+  One store slide, picked by the query string: slides.html?slide=library&format=amo
+  slides: hero, reader, library, alerts, sources, privacy, tile, marquee. formats: amo (4:3), cws (16:10).
+  scripts/store-shots.mjs captures the screenshots into shots/ and renders every slide. To tweak the design,
+  run it once, then serve this folder (python3 -m http.server) and open a slide in a 1200x900 or 1280x800 window.
+-->
+<body>
+  <main id="slide"></main>
+  <script type="module" src="slides.js"></script>
+</body>
+</html>

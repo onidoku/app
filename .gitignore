@@ -11,3 +11,6 @@ examples/
 # chrome "pack extension" output: the .pem is a private signing key
 *.pem
 *.crx
+
+# raw captures for the store slides (scripts/store-shots.mjs)
+apps/extension/store/promo/shots/
