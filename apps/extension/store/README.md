@@ -112,4 +112,6 @@ reviewer asks.
 then certify all three statements (no selling, no unrelated use, no creditworthiness use).
 
 **Edge Add-ons:** same zip, text, answers and screenshots; category Entertainment; it takes the privacy policy as
-a URL.
+a URL (https://onidoku.github.io/privacy.html). search terms (max 7, 30 chars each, 21 words total; no
+trademarks): `manga reader`, `webcomic reader`, `web novel reader`, `comic reader`, `reader mode`,
+`new chapter alerts`, `komga kavita`.
