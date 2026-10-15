@@ -1,15 +1,12 @@
-# For a version tag (e.g. v0.1.0): tests, builds the Chrome and Firefox packages, submits the Firefox one to
-# addons.mozilla.org for review (listed), and creates a GitHub release with the packages.
-# Needs repo secrets FIREFOX_ADDON_JWT_ISSUERS and FIREFOX_ADDON_JWT_SECRET (AMO API key and secret).
+# For a version tag (e.g. v0.1.0): tests, builds the Chrome and Firefox packages and creates a GitHub release
+# with them. Firefox versions go to addons.mozilla.org by hand for now (the submit step below is paused).
 # Mozilla signs the Firefox version once a reviewer approves it; then run the "firefox signed xpi" workflow
 # to attach the signed .xpi to the release.
 name: release
 
-# Paused: releases are manual for now (0.1.0 was submitted to AMO by hand). Pushing a tag does nothing; to run it,
-# use Actions → release → Run workflow and pick the tag. To automate again, restore:
-#   push:
-#     tags: ['v*']
 on:
+  push:
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -43,7 +40,10 @@ jobs:
       - run: pnpm test
       - run: pnpm ext:package
 
+      # Paused: submit to AMO by hand for now. To automate again, drop the `if` and set repo secrets
+      # FIREFOX_ADDON_JWT_ISSUERS and FIREFOX_ADDON_JWT_SECRET (AMO API key and secret).
       - name: Submit to addons.mozilla.org
+        if: false
         working-directory: apps/extension
         env:
           AMO_ISSUER: ${{ secrets.FIREFOX_ADDON_JWT_ISSUERS }}
@@ -66,7 +66,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cat > "$RUNNER_TEMP/notes.md" <<EOF
-          **Firefox:** submitted to addons.mozilla.org for review. the signed \`.xpi\` is added here once Mozilla approves it.
+          **Firefox:** get it from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/onidoku/). the signed \`.xpi\` is added here once Mozilla approves this version.
           **Chrome / Edge:** \`onidoku-chrome-$VERSION.zip\` is the store package. to try it without the store, unzip it and use **Load unpacked** on \`chrome://extensions\` (Developer mode).
           EOF
           gh release create "$GITHUB_REF_NAME" \

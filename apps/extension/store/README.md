@@ -30,8 +30,8 @@ Chrome. the slides' text is in `promo/slides.js`; colors and type in `promo/slid
 serve `promo/` (`python3 -m http.server -d apps/extension/store/promo`) and open a slide in a 1280x800 or
 1200x900 window.
 
-the release workflow sends `summary.txt`, `description.txt` and `reviewer-notes.txt` to AMO
-(`../scripts/amo-metadata.mjs`), so edit them here, not on AMO's form.
+edit `summary.txt`, `description.txt` and `reviewer-notes.txt` here first, then copy them to AMO's form: the
+release workflow's AMO submit step (`../scripts/amo-metadata.mjs`) is paused, and new versions go up by hand.
 
 common to every store:
 

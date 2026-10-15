@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  Chrome · <a href="https://microsoftedge.microsoft.com/addons/detail/onidoku/iolhpcmeplfhkigephkjbjolpodlaide">Edge</a> · Firefox · Firefox for Android
+  Chrome · <a href="https://microsoftedge.microsoft.com/addons/detail/onidoku/iolhpcmeplfhkigephkjbjolpodlaide">Edge</a> · <a href="https://addons.mozilla.org/firefox/addon/onidoku/">Firefox</a> · <a href="https://addons.mozilla.org/android/addon/onidoku/">Firefox for Android</a>
 </p>
 
 ---
