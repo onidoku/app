@@ -1,8 +1,9 @@
-import { configOrigins, seriesIdFor, type ChapterRef, type Series, type SiteConfig } from '@onidoku/core';
+import { ANILIST_SCORE_RANGE, configOrigins, seriesIdFor, type AnilistChanges, type AnilistMedia, type AnilistStatus, type AnilistTracking, type ChapterRef, type Series, type SiteConfig } from '@onidoku/core';
+import type { AnilistState } from './anilist';
 import { button, h } from './dom';
-import { LIBRARY_CHANGED_KEY } from './keys';
+import { ANILIST_KEY, LIBRARY_CHANGED_KEY } from './keys';
 import { searchByUrl, errorMessage, send, type ConfigMatch, type LibraryItem, type SeriesPreview } from './messages';
-import { appNav, siteHome, sourceIcon, timeAgo, toast } from './ui';
+import { appNav, iconButton, siteHome, sourceIcon, timeAgo, toast } from './ui';
 import { setImageSrc } from './servers';
 
 const app = document.getElementById('app')!;
@@ -30,6 +31,15 @@ let checking = false;
 /** Chapter rows rendered so far: long lists (thousands on novel sites) render in chunks. */
 let limit = 0;
 
+/** Whether AniList is connected, for the "track on AniList" control. */
+let anilist: AnilistState | undefined;
+
+/** A Paperback title's page on its site, asked of the source after the page loads. */
+let shareUrl: { url: string; link?: string } | undefined;
+
+/** The linked AniList entry as AniList has it now, fetched after the page loads. */
+let tracking: { mediaId: number; data?: AnilistTracking; error?: string } | undefined;
+
 /** Rows added per "Show more". */
 const CHUNK = 100;
 
@@ -39,6 +49,7 @@ async function load(): Promise<void> {
     const match = await send<ConfigMatch | null>({ type: 'configFor', url: seriesUrl });
     if (match?.kind === 'series') seriesId = seriesIdFor(match.config.id, seriesUrl);
   }
+  anilist = await send<AnilistState>({ type: 'anilistState' }).catch(() => undefined);
   item = seriesId ? await send<LibraryItem | null>({ type: 'series', id: seriesId }) : null;
   if (item?.entry.newChapters?.length) {
     // Opening the series counts as seeing its new chapters; keep them marked while the page is open.
@@ -46,6 +57,7 @@ async function load(): Promise<void> {
     item = (await send<LibraryItem | null>({ type: 'seenSeries', id: seriesId })) ?? item;
   }
   if (item) {
+    refreshTracking();
     seriesUrl = item.entry.series.url;
     site = configs.find((c) => c.id === item!.entry.series.siteId);
     preview = null;
@@ -80,6 +92,22 @@ async function load(): Promise<void> {
     state = 'error';
   }
   render();
+}
+
+/** A Paperback title's link: its page once the source has named it, its site's home page until then. */
+function sourceLink(config: SiteConfig, url: string): string {
+  if (shareUrl?.url !== url) {
+    const asked: { url: string; link?: string } = { url };
+    shareUrl = asked;
+    void send<string | null>({ type: 'shareUrl', url })
+      .then((link) => {
+        if (!link || shareUrl !== asked) return;
+        asked.link = link;
+        app.querySelector<HTMLAnchorElement>('.source-link')?.setAttribute('href', link);
+      })
+      .catch(() => {});
+  }
+  return shareUrl.link ?? siteHome(config);
 }
 
 /** Keeps both forms in the address bar, so a reload or a shared link finds the series either way. */
@@ -125,8 +153,8 @@ function render(): void {
       byline(series.authors ?? [], series.status),
       h(
         'a',
-        // Paperback titles have no page of their own to link to: their site's home page stands in.
-        { class: 'source-link', href: site?.paperback ? siteHome(site) : series.url, target: '_blank', rel: 'noopener' },
+        // Paperback titles are linked to the page their source shares, or to their site's home page.
+        { class: 'source-link', href: site?.paperback ? sourceLink(site, series.url) : series.url, target: '_blank', rel: 'noopener' },
         sourceIcon(site, 16),
         site ? `open on ${site.name}` : 'open on site',
       ),
@@ -139,6 +167,7 @@ function render(): void {
       ),
     series.description && description(series.description),
     progressBlock(chapters.length, readIndex),
+    trackerBlock(),
     confirmingRemove ? removeConfirmation() : h('div', { class: 'actions' }, ...actions()),
   );
 
@@ -169,6 +198,220 @@ function progressBlock(total: number, readIndex: number): HTMLElement {
     h('span', { class: 'progress-text' }, h('strong', { text: `${read} of ${total} read` }), unread ? ` · ${unread} unread` : total ? ' · all caught up' : ''),
     h('span', { class: 'hint', text: when }),
   );
+}
+
+const STATUS_LABELS: Record<AnilistStatus, string> = {
+  CURRENT: 'reading',
+  PLANNING: 'planning to read',
+  COMPLETED: 'completed',
+  PAUSED: 'paused',
+  DROPPED: 'dropped',
+  REPEATING: 'rereading',
+};
+
+/** Loads the linked entry from AniList in the background; the card shows "loading" meanwhile. */
+function refreshTracking(): void {
+  const mediaId = anilist?.user ? item?.entry.trackers?.anilist?.id : undefined;
+  if (!mediaId) {
+    tracking = undefined;
+    return;
+  }
+  if (tracking?.mediaId !== mediaId) tracking = { mediaId };
+  send<AnilistTracking>({ type: 'anilistTracking', mediaId })
+    .then((data) => (tracking = { mediaId, data }))
+    .catch((err) => (tracking = { mediaId, data: tracking?.data, error: errorMessage(err) }))
+    .finally(() => {
+      if (tracking?.mediaId === mediaId) render();
+    });
+}
+
+/** Where the series is tracked on AniList and its entry there (library series only). */
+function trackerBlock(): HTMLElement | undefined {
+  if (!item || !anilist?.available) return undefined;
+  const link = item.entry.trackers?.anilist;
+  if (!link) return undefined;
+  if (!anilist.user) {
+    return h('p', { class: 'hint tracker' }, `linked to ${link.title} on AniList, but AniList isn’t connected: `, h('a', { href: 'options.html#trackers', text: 'connect it' }));
+  }
+  const data = tracking?.data;
+  const entry = data?.entry;
+  const facts: (string | HTMLElement)[] = [];
+  if (!data) facts.push(tracking?.error ?? 'loading from AniList…');
+  else if (!entry) facts.push('not on your list yet');
+  else {
+    facts.push(h('strong', { text: STATUS_LABELS[entry.status] }));
+    facts.push(`ch ${entry.progress}${data.media.chapters ? ` / ${data.media.chapters}` : ''}`);
+    if (entry.score) facts.push(`★ ${entry.score}/${ANILIST_SCORE_RANGE[data.scoreFormat].max}`);
+    if (entry.notes) facts.push(h('span', { class: 'tracker-notes', title: entry.notes, text: `“${entry.notes}”` }));
+  }
+  const updated = entry?.updatedAt ? h('span', { class: 'hint', title: new Date(entry.updatedAt).toLocaleString(), text: `updated ${timeAgo(entry.updatedAt)}` }) : undefined;
+  const edit = iconButton('edit', 'edit your AniList entry', 'row-icon', () => openAnilistEditor(link), true);
+  edit.disabled = !data;
+  return h(
+    'div',
+    { class: 'tracker-card' },
+    anilistMark(),
+    h(
+      'div',
+      { class: 'tracker-body' },
+      h('div', { class: 'tracker-head' }, h('a', { href: `https://anilist.co/manga/${link.id}`, target: '_blank', rel: 'noopener', text: `${link.title} ↗` }), updated),
+      h('div', { class: `tracker-facts${tracking?.error && !data ? ' error' : ''}` }, ...facts.flatMap((f, i) => (i ? [' · ', f] : [f]))),
+    ),
+    edit,
+  );
+}
+
+/** Status, chapters, score and notes on AniList, plus unlinking. Only changed fields are saved. */
+function openAnilistEditor(link: { id: number; title: string }): void {
+  const data = tracking?.data;
+  if (!data) return;
+  const entry = data.entry;
+  const range = ANILIST_SCORE_RANGE[data.scoreFormat];
+
+  const status = h('select', {}, ...(Object.keys(STATUS_LABELS) as AnilistStatus[]).map((s) => h('option', { value: s, text: STATUS_LABELS[s] })));
+  status.value = entry?.status ?? 'PLANNING';
+  const progress = h('input', { type: 'number', min: '0', step: '1', ...(data.media.chapters ? { max: String(data.media.chapters) } : {}) });
+  progress.value = String(entry?.progress ?? 0);
+  const score = h('input', { type: 'number', min: '0', max: String(range.max), step: String(range.step), placeholder: 'no score' });
+  score.value = entry?.score ? String(entry.score) : '';
+  const notes = h('textarea', { rows: '3', placeholder: 'only you see these, on AniList', maxlength: '2000' });
+  notes.value = entry?.notes ?? '';
+  const message = h('p', { class: 'error', role: 'alert' });
+  message.hidden = true;
+  const save = h('button', { class: 'primary', type: 'submit', text: entry ? 'save' : 'add to your list' });
+  const close = h('button', { class: 'icon-button', type: 'button', 'aria-label': 'close', text: '✕' });
+
+  const form = h(
+    'form',
+    { class: 'anilist-editor' },
+    h(
+      'div',
+      { class: 'field-row' },
+      h('label', { class: 'field grow' }, 'status', status),
+      h('label', { class: 'field' }, data.media.chapters ? `chapters (of ${data.media.chapters})` : 'chapters read', progress),
+      h('label', { class: 'field' }, `score (out of ${range.max})`, score),
+    ),
+    h('label', { class: 'field' }, 'notes', notes),
+    message,
+    h(
+      'div',
+      { class: 'editor-actions' },
+      button('unlink from AniList', 'link danger-text', async () => {
+        dialog.close();
+        await linkAnilist(null);
+      }, 'stop copying progress to this entry; the entry stays on your AniList list'),
+      save,
+    ),
+  );
+  const dialog = h('dialog', { class: 'add-dialog', 'aria-label': 'your AniList entry' }, h('header', { class: 'dialog-head' }, h('h2', { text: link.title }), close), form);
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const changes: AnilistChanges = {};
+    if (!entry || status.value !== entry.status) changes.status = status.value as AnilistStatus;
+    if (!entry || Number(progress.value) !== entry.progress) changes.progress = Math.max(0, Math.floor(Number(progress.value) || 0));
+    const scored = score.value === '' ? 0 : Number(score.value);
+    if (scored !== (entry?.score ?? 0)) changes.score = Math.min(range.max, Math.max(0, scored));
+    if (notes.value !== (entry?.notes ?? '')) changes.notes = notes.value;
+    if (!Object.keys(changes).length) return dialog.close();
+    save.disabled = true;
+    save.textContent = 'saving…';
+    try {
+      const saved = await send<AnilistTracking['entry']>({ type: 'anilistSave', mediaId: link.id, changes });
+      tracking = { mediaId: link.id, data: { ...data, entry: saved } };
+      dialog.close();
+      toast('saved on AniList.');
+      render();
+    } catch (err) {
+      message.textContent = errorMessage(err);
+      message.hidden = false;
+      save.disabled = false;
+      save.textContent = entry ? 'save' : 'add to your list';
+    }
+  });
+  close.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  dialog.addEventListener('close', () => dialog.remove());
+  document.body.append(dialog);
+  dialog.showModal();
+  status.focus();
+}
+
+/** The AniList mark (as on the "tracking on AniList" chip) with a plus: link this series there. */
+function trackButton(): HTMLButtonElement {
+  const label = 'track on AniList: copy your progress to your AniList list as you read';
+  const el = button('', 'secondary icon-only track-button', openAnilistPicker, label);
+  el.setAttribute('aria-label', label);
+  el.append(anilistMark(), h('span', { class: 'track-plus', 'aria-hidden': 'true', text: '+' }));
+  return el;
+}
+
+function anilistMark(): HTMLElement {
+  return h('span', { class: 'tracker-mark', 'aria-hidden': 'true', text: 'AL' });
+}
+
+async function linkAnilist(media: Pick<AnilistMedia, 'id' | 'title'> | null): Promise<void> {
+  try {
+    item = await send<LibraryItem>({ type: 'anilistLink', id: seriesId, media });
+    refreshTracking();
+    toast(media ? `linked to ${media.title} on AniList.` : 'unlinked from AniList.');
+  } catch (err) {
+    toast(errorMessage(err), { error: true });
+  }
+  render();
+}
+
+/** Search AniList for the series (its title to start with) and pick the matching entry. */
+function openAnilistPicker(): void {
+  const input = h('input', { type: 'search', 'aria-label': 'search AniList' });
+  input.value = item!.entry.series.title;
+  const results = h('ul', { class: 'configs anilist-results', 'aria-live': 'polite' });
+  const message = h('p', { class: 'hint' });
+  const close = h('button', { class: 'icon-button', type: 'button', 'aria-label': 'close', text: '✕' });
+  const form = h('form', { class: 'search-form' }, input, h('button', { class: 'primary', type: 'submit', text: 'search' }));
+  const dialog = h('dialog', { class: 'add-dialog', 'aria-label': 'track on AniList' }, h('header', { class: 'dialog-head' }, h('h2', { text: 'track on AniList' }), close), form, message, results);
+
+  const search = async () => {
+    message.textContent = 'searching…';
+    results.replaceChildren();
+    try {
+      const found = await send<AnilistMedia[]>({ type: 'anilistSearch', query: input.value.trim() });
+      message.textContent = found.length ? '' : 'nothing on AniList matches. try another title.';
+      results.replaceChildren(
+        ...found.map((media) => {
+          const cover = media.cover ? h('img', { class: 'anilist-cover', src: media.cover, alt: '' }) : h('span', { class: 'anilist-cover blank' });
+          const meta = [media.format?.toLowerCase().replace('_', ' '), media.year, media.chapters ? `${media.chapters} chapters` : undefined].filter(Boolean).join(' · ');
+          return h(
+            'li',
+            {},
+            cover,
+            h('div', { class: 'config-info' }, h('strong', { text: media.title }), h('span', { class: 'hint' }, meta, meta ? ' · ' : '', h('a', { href: media.siteUrl, target: '_blank', rel: 'noopener', text: 'view ↗' }))),
+            h('div', { class: 'config-actions' }, button('link', 'primary small', async () => {
+              dialog.close();
+              await linkAnilist({ id: media.id, title: media.title });
+            })),
+          );
+        }),
+      );
+    } catch (err) {
+      message.textContent = errorMessage(err);
+    }
+  };
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    void search();
+  });
+  close.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  dialog.addEventListener('close', () => dialog.remove());
+  document.body.append(dialog);
+  dialog.showModal();
+  void search();
 }
 
 /** Shown while there's no series to show: loading, needs access, or gone. */
@@ -220,27 +463,35 @@ function actions(): HTMLElement[] {
   if (!item) {
     const first = preview!.chapters[0];
     const list: HTMLElement[] = [];
-    if (first) list.push(button(`start reading: ${first.title}`, 'primary', () => openChapter(first)));
+    if (first) list.push(readButton('start reading', first, 'primary'));
     list.push(button('add to library', first ? 'secondary' : 'primary', addToLibrary));
     return list;
   }
   const { entry, next, unread } = item;
   const list: HTMLElement[] = [];
   if (next) {
-    const label = !entry.readUpTo ? `start reading: ${next.title}` : unread ? `continue: ${next.title}` : `read again: ${next.title}`;
-    list.push(button(label, 'primary', () => openChapter(next)));
+    list.push(readButton(!entry.readUpTo ? 'start reading' : unread ? 'continue reading' : 'read again', next, 'primary'));
   }
-  const check = button(checking ? 'checking…' : 'check for new chapters', 'secondary', checkNow);
+  // Everything but reading is an icon, named by its tooltip and accessible label.
+  const check = iconButton('refresh', checking ? 'checking for new chapters…' : 'check for new chapters', `secondary icon-only${checking ? ' spinning' : ''}`, checkNow, true);
   check.disabled = checking;
+  list.push(check);
+  if (anilist?.user && !entry.trackers?.anilist) list.push(trackButton());
   list.push(
-    check,
-    button('remove from library', 'secondary danger-text', () => {
+    iconButton('trash', 'remove from library', 'secondary icon-only danger-text', () => {
       confirmingRemove = true;
       render();
       app.querySelector<HTMLElement>('.confirm-remove button')?.focus();
-    }),
+    }, true),
   );
   return list;
+}
+
+/** "continue reading" and the like: the chapter it opens is in the tooltip, not the label. */
+function readButton(label: string, chapter: ChapterRef, className: string): HTMLButtonElement {
+  const el = iconButton('play', label, `${className} read-next`, () => openChapter(chapter));
+  el.title = `${label}: ${chapter.title}`;
+  return el;
 }
 
 async function checkNow(): Promise<void> {
@@ -274,13 +525,14 @@ function removeConfirmation(): HTMLElement {
         confirmingRemove = false;
         render();
       }),
-      button('remove', 'destructive', removeFromLibrary),
+      iconButton('trash', 'remove', 'destructive', removeFromLibrary),
     ),
   );
 }
 
 async function removeFromLibrary(): Promise<void> {
   const removed = item!.entry;
+  for (const b of Array.from(app.querySelectorAll<HTMLButtonElement>('.confirm-remove button'))) b.disabled = true;
   confirmingRemove = false;
   try {
     await send({ type: 'removeSeries', id: seriesId });
@@ -320,19 +572,19 @@ function chapterSection(): HTMLElement {
     list.replaceWith(fresh);
     list = fresh;
   });
-  const sort = button(newestFirst ? 'newest first' : 'oldest first', 'secondary', () => {
+  const sort = iconButton(newestFirst ? 'newest' : 'oldest', newestFirst ? 'newest first: show oldest first' : 'oldest first: show newest first', 'secondary icon-only', () => {
     newestFirst = !newestFirst;
     limit = CHUNK;
     render();
-  }, 'change order');
+  }, true);
 
   const next = item?.unread ? item.next : undefined;
   const tools: HTMLElement[] = [search, sort];
-  if (next) tools.push(button('jump to up next', 'secondary', () => jumpTo(next.url)));
+  if (next) tools.push(iconButton('jump', 'jump to up next', 'secondary icon-only', () => jumpTo(next.url), true));
   if (item && chapters.length) {
     const allRead = item.unread === 0;
     tools.push(
-      button(allRead ? 'mark all unread' : 'mark all read', 'secondary', () => setProgress(allRead ? null : chapters.at(-1)!.url, true)),
+      iconButton(allRead ? 'undo' : 'checkAll', allRead ? 'mark all unread' : 'mark all read', 'secondary icon-only', () => setProgress(allRead ? null : chapters.at(-1)!.url, true), true),
     );
   }
 
@@ -386,8 +638,8 @@ function chapterRow({ chapter, index, read }: { chapter: ChapterRef; index: numb
   const { entry, unread, next } = item;
   const upNext = unread > 0 && next?.url === chapter.url;
   const toggle = read
-    ? button('mark unread', 'link', () => setProgress(entry.chapters[index - 1]?.url ?? null), 'mark this and later chapters unread')
-    : button('mark read', 'link', () => setProgress(chapter.url), 'mark this and earlier chapters read');
+    ? iconButton('undo', 'mark this and later chapters unread', 'row-icon', () => setProgress(entry.chapters[index - 1]?.url ?? null), true)
+    : iconButton('check', 'mark this and earlier chapters read', 'row-icon', () => setProgress(chapter.url), true);
   return h(
     'li',
     { class: [read ? 'read' : '', upNext ? 'up-next' : ''].join(' ').trim(), 'data-url': chapter.url },
@@ -436,7 +688,7 @@ function openChapter(chapter: ChapterRef): void {
 
 // Progress saved from the reader or the on-page prompt in other tabs shows up here live.
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && LIBRARY_CHANGED_KEY in changes && !confirmingRemove) void load();
+  if (area === 'local' && (LIBRARY_CHANGED_KEY in changes || ANILIST_KEY in changes) && !confirmingRemove) void load();
 });
 
 load().catch((err) => {

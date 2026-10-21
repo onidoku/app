@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>welcome · onidoku</title>
+    <link rel="stylesheet" href="ui.css" />
+  </head>
+  <body class="app welcome">
+    <main>
+      <header class="welcome-head">
+        <img src="icons/logo.svg" alt="" width="48" height="48" />
+        <div>
+          <h1>welcome to onidoku</h1>
+          <p class="hint">reader mode, a library and new-chapter alerts for the comic and novel sites you already read. everything stays in your browser.</p>
+        </div>
+      </header>
+
+      <ul class="welcome-features">
+        <li><strong>reader mode</strong><span class="hint">read chapters in a clean reader, without the site’s ads and clutter.</span></li>
+        <li><strong>library</strong><span class="hint">follow series and pick up where you left off.</span></li>
+        <li><strong>new chapters</strong><span class="hint">onidoku checks your series and tells you when something new is out.</span></li>
+        <li><strong>search and explore</strong><span class="hint">find series across every source you’ve added, in one place.</span></li>
+      </ul>
+
+      <h2>set up</h2>
+      <ol class="welcome-steps">
+        <li id="step-detect">
+          <div class="step-text">
+            <strong>offer the reader on any site</strong>
+            <span class="hint">onidoku spots chapter pages and offers reader mode. this needs access to all sites; pages are checked on your device and nothing is sent anywhere. without it, the reader is still one click away in the toolbar popup.</span>
+          </div>
+          <div class="step-action">
+            <button id="detect-allow" class="primary" type="button">allow on all sites</button>
+            <span id="detect-done" class="step-done" hidden>✓ on</span>
+          </div>
+        </li>
+
+        <li id="step-featured" hidden>
+          <div class="step-text">
+            <strong>free sources to start with</strong>
+            <span class="hint">already installed: works that are in the public domain or openly licensed for sharing. allow access to their sites so onidoku can read them and check for new chapters.</span>
+          </div>
+          <div class="step-action">
+            <button id="featured-allow" class="primary" type="button">allow access</button>
+            <span id="featured-done" class="step-done" hidden>✓ ready</span>
+          </div>
+          <ul id="featured" class="configs step-body"></ul>
+        </li>
+
+        <li id="step-server">
+          <div class="step-text">
+            <strong>connect Komga or Kavita</strong>
+            <span class="hint">if you run your own media server, read its comics, manga and books here, with progress synced both ways. no server? skip this.</span>
+          </div>
+          <div class="step-action"><span id="server-done" class="step-done" hidden></span></div>
+          <form id="add-server" class="step-body">
+            <div class="field-row">
+              <label class="field">server
+                <select id="server-kind">
+                  <option value="komga">Komga</option>
+                  <option value="kavita">Kavita</option>
+                </select>
+              </label>
+              <label class="field grow">address
+                <input id="server-url" type="url" placeholder="http://192.168.1.5:25600" required />
+              </label>
+            </div>
+            <label class="field">API key
+              <input id="server-key" type="password" autocomplete="off" spellcheck="false" />
+              <span id="server-key-hint" class="hint"></span>
+            </label>
+            <div id="komga-login" class="field-row">
+              <label class="field grow">or username
+                <input id="server-user" type="text" autocomplete="username" spellcheck="false" />
+              </label>
+              <label class="field grow">and password
+                <input id="server-password" type="password" autocomplete="current-password" />
+              </label>
+            </div>
+            <p id="server-error" class="error" role="alert" hidden></p>
+            <div><button class="primary" type="submit">connect</button></div>
+          </form>
+        </li>
+
+        <li id="step-paperback" hidden>
+          <div class="step-text">
+            <strong>use your Paperback repos</strong>
+            <span class="hint">onidoku runs sources from Paperback 0.8 extension repos. they’re code written by the repo’s authors, so each runs in its own sandbox, and needs access to all sites to load pages and images.</span>
+          </div>
+          <div class="step-action"><span id="paperback-done" class="step-done" hidden></span></div>
+          <form id="from-paperback" class="step-body">
+            <div class="field-row">
+              <label class="field grow">repo address
+                <input id="paperback-url" type="url" placeholder="https://someone.github.io/extensions/0.8" required />
+              </label>
+            </div>
+            <p id="paperback-error" class="error" role="alert" hidden></p>
+            <div><button class="secondary" type="submit">list sources</button></div>
+            <ul id="paperback-listing" class="configs" aria-live="polite"></ul>
+          </form>
+        </li>
+      </ol>
+
+      <footer class="welcome-foot">
+        <a class="button primary" href="library.html">open your library</a>
+        <a href="options.html">all sources and settings</a>
+      </footer>
+    </main>
+    <script src="welcome.js"></script>
+  </body>
+</html>

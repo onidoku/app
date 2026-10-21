@@ -50,9 +50,27 @@ export interface PaperbackRepo {
   sources: PaperbackListing[];
 }
 
-/** Normalizes what people paste: the repo's page, its versioning.json, or the folder. */
+/**
+ * Reads a repo page's "add to Paperback" link (`paperback://addRepo?displayName=…&url=…`), which
+ * only the iOS app can open. Null for any other link.
+ */
+export function paperbackRepoLink(href: string): { url: string; name?: string } | null {
+  let link: URL;
+  try {
+    link = new URL(href.trim());
+  } catch {
+    return null;
+  }
+  if (link.protocol !== 'paperback:' || link.hostname.toLowerCase() !== 'addrepo') return null;
+  const url = link.searchParams.get('url');
+  if (!url) return null;
+  const name = link.searchParams.get('displayName')?.trim();
+  return name ? { url, name } : { url };
+}
+
+/** Normalizes what people paste: the repo's page, its versioning.json, the folder, or its paperback:// link. */
 export function paperbackRepoUrl(input: string): string {
-  const url = new URL(input.trim());
+  const url = new URL(paperbackRepoLink(input)?.url ?? input.trim());
   if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error('a repo address starts with https://');
   url.hash = '';
   url.search = '';

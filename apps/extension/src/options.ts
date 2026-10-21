@@ -1,8 +1,9 @@
-import { configOrigins, paperbackConfigId, paperbackFiles, parseServer, parseSiteConfig, SERVER_NAMES, type PaperbackListing, type PaperbackRepo, type ServerKind, type SiteConfig } from '@onidoku/core';
+import { ANILIST_ORIGINS, configOrigins, paperbackConfigId, paperbackFiles, parseServer, parseSiteConfig, SERVER_NAMES, type PaperbackListing, type PaperbackRepo, type ServerKind, type SiteConfig } from '@onidoku/core';
 import { button, h } from './dom';
 import { ALL_SITES, errorMessage, send, type LibraryItem, type ServerSummary, type Settings } from './messages';
-import { CONFIGS_KEY, LIBRARY_CHANGED_KEY, PAPERBACK_KEY, SERVERS_KEY, SETTINGS_KEY } from './keys';
+import { ANILIST_KEY, CONFIGS_KEY, LIBRARY_CHANGED_KEY, PAPERBACK_KEY, SERVERS_KEY, SETTINGS_KEY } from './keys';
 import { appNav, nsfwTag, sourceIcon } from './ui';
+import type { AnilistState } from './anilist';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -333,12 +334,18 @@ dialog.addEventListener('click', (event) => {
 });
 
 // Links elsewhere can open the dialog directly: options.html#add, #add-server, #add-url, #add-json, #add-paperback.
+// #add-paperback=<repo address> also lists that repo's sources (repo links found on pages, see detect.ts).
 function openFromHash(): void {
   const match = location.hash.match(/^#add(?:-(server|url|json|paperback))?$/);
+  const repo = location.hash.match(/^#add-paperback=(.+)$/);
   if (match) openDialog((match[1] as Panel | undefined) ?? 'server');
+  else if (repo && __PAPERBACK__) {
+    openDialog('paperback');
+    field('paperback-url').value = decodeURIComponent(repo[1]!);
+    paperbackForm.requestSubmit();
+  }
 }
 window.addEventListener('hashchange', openFromHash);
-openFromHash();
 
 $('from-url').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -638,13 +645,48 @@ detectToggle.addEventListener('change', async () => {
   show(detectToggle.checked ? 'onidoku will offer the reader on pages that look like chapters.' : 'stopped offering the reader on other sites.');
 });
 
+// ---- Trackers -----------------------------------------------------------------------------
+
+async function renderAnilist(): Promise<void> {
+  const state = await send<AnilistState>({ type: 'anilistState' });
+  $('trackers').hidden = !state.available;
+  if (!state.available) return;
+  $('anilist-status').textContent = state.user
+    ? `connected as ${state.user.name}. link a series on its page to copy your progress there as you read.`
+    : 'copy your reading progress to your AniList list as you read.';
+  $('anilist-actions').replaceChildren(
+    state.user
+      ? button('disconnect', 'link danger-text', async () => {
+          await send({ type: 'anilistLogout' });
+          show('disconnected from AniList. series stay linked for when you connect again.');
+        })
+      : button('connect AniList', 'primary small', async () => {
+          // Must be the first await: browsers only show the permission prompt during the click.
+          if (!(await chrome.permissions.request({ origins: ANILIST_ORIGINS }).catch(() => false))) {
+            show('onidoku needs access to anilist.co to log in and update your list.', true);
+            return;
+          }
+          try {
+            await send({ type: 'anilistLogin' });
+            show('log in on the AniList tab; it closes by itself when you’re done.');
+          } catch (err) {
+            show(errorMessage(err), true);
+          }
+        }),
+  );
+}
+
 // Sources and the library can change underneath the page (other tabs, onInstalled, update checks).
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && (CONFIGS_KEY in changes || SERVERS_KEY in changes || PAPERBACK_KEY in changes || LIBRARY_CHANGED_KEY in changes)) void render();
   if (area === 'local' && SETTINGS_KEY in changes) void renderSettings();
+  if (area === 'local' && ANILIST_KEY in changes) void renderAnilist();
 });
 chrome.permissions.onAdded.addListener(() => void render());
 chrome.permissions.onRemoved.addListener(() => void render());
 
 void render();
 void renderSettings();
+void renderAnilist();
+// Last, once every form's handlers are in place.
+openFromHash();

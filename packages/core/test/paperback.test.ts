@@ -11,6 +11,7 @@ import {
   PAPERBACK_ORIGIN,
   PaperbackInstance,
   paperbackConfigId,
+  paperbackRepoLink,
   paperbackRepoUrl,
   paperbackSections,
   paperbackSiteConfig,
@@ -62,6 +63,16 @@ describe('paperback repos', () => {
       expect(paperbackRepoUrl(input)).toBe(REPO);
     }
     expect(() => paperbackRepoUrl('ftp://example.org/repo')).toThrow(/https/);
+    expect(paperbackRepoUrl(`paperback://addRepo?displayName=Test&url=${encodeURIComponent(`${REPO}/`)}`)).toBe(REPO);
+    expect(() => paperbackRepoUrl('paperback://addRepo?url=ftp%3A%2F%2Fexample.org%2Frepo')).toThrow(/https/);
+  });
+
+  it('reads the "add to Paperback" links on repo pages', () => {
+    expect(paperbackRepoLink(`paperback://addRepo?displayName=Some%20Repo&url=${encodeURIComponent(REPO)}`)).toEqual({ url: REPO, name: 'Some Repo' });
+    expect(paperbackRepoLink(`paperback://addrepo/?url=${REPO}`)).toEqual({ url: REPO });
+    for (const href of ['paperback://addRepo', 'paperback://open?url=x', `${REPO}/versioning.json`, 'not a url']) {
+      expect(paperbackRepoLink(href)).toBeNull();
+    }
   });
 
   it('reads 0.8 repos and refuses other extension API versions', () => {

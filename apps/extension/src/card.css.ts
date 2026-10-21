@@ -33,6 +33,12 @@ button:disabled { opacity: .5; cursor: default; }
 .primary { background: var(--accent); color: var(--accent-text); font-weight: 600; max-width: 100%;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .secondary { background: var(--secondary); color: var(--text); }
+.continue { flex: 1 1 0; min-width: 0; display: grid; gap: 1px; padding: 7px 12px; text-align: left; }
+.continue span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.continue .chapter { font-size: 12px; font-weight: 400; opacity: .85; }
+.continue + .secondary { flex: none; }
+.primary:hover:not(:disabled) { filter: brightness(1.08); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .close { background: none; color: var(--muted); padding: 0 2px; font-size: 16px; line-height: 1; }
 .close:hover { color: var(--text); }
 `;

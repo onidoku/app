@@ -48,6 +48,14 @@ export interface LibraryEntry {
   addedAt: number;
   lastReadAt?: number;
   checkedAt?: number;
+  /** The same series on tracking sites, where progress is copied as it's read. */
+  trackers?: { anilist?: TrackerLink };
+}
+
+/** A series on a tracker: its id there, and its title for showing the link. */
+export interface TrackerLink {
+  id: number;
+  title: string;
 }
 
 type Entries = Record<string, LibraryEntry>;
@@ -181,6 +189,21 @@ export class Library {
     });
   }
 
+  /** Links a series to its entry on a tracker, or unlinks it (`null`). */
+  setTracker(id: string, tracker: 'anilist', link: TrackerLink | null): Promise<LibraryEntry | undefined> {
+    return this.mutate(id, (all, changed) => {
+      const entry = all[id];
+      if (!entry) return undefined;
+      const trackers = { ...entry.trackers };
+      if (link) trackers[tracker] = { id: link.id, title: link.title };
+      else delete trackers[tracker];
+      if (Object.keys(trackers).length) entry.trackers = trackers;
+      else delete entry.trackers;
+      changed.add(id);
+      return entry;
+    });
+  }
+
   /**
    * Replaces the chapter list with a fresh scrape and returns the chapters not seen before.
    * Pass the freshly scraped series to refresh its details (title, cover, description…) too.
@@ -264,6 +287,9 @@ export const LibraryEntrySchema = v.object({
   addedAt: v.number(),
   lastReadAt: v.number().optional(),
   checkedAt: v.number().optional(),
+  trackers: v
+    .object({ anilist: v.object({ id: v.number().int(), title: v.string() }).optional() })
+    .optional(),
 });
 
 /** Drops new-chapter marks for chapters now read or no longer listed. */

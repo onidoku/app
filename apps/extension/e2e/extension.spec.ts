@@ -765,6 +765,29 @@ test.describe('paperback sources', () => {
     expect(next.hits.map((h) => h.title)).toEqual(['Iron Tide']);
   });
 
+  test('offers to add a repo found on a page, and opens its "add to Paperback" link in onidoku', async ({ context, worker }) => {
+    // What turning on "offer the reader on any site" registers; the test browser can't grant access to all sites.
+    await worker.evaluate(() => chrome.scripting.registerContentScripts([{ id: 'detect-test', js: ['detect.js'], matches: ['http://localhost:4173/paperback/*'], runAt: 'document_idle' }]));
+    const page = await context.newPage();
+    await page.goto(`${SITE}/paperback/`);
+    await expect(page.locator('.od-prompt')).toContainText('this page has a Paperback repo: Test Repo.');
+
+    const listed = async (options: Page) => {
+      await expect(options).toHaveURL(/options\.html#add-paperback=/);
+      await expect(options.locator('#paperback-url')).toHaveValue(REPO);
+      await expect(options.locator('#paperback-listing li', { hasText: 'Test Comics (Paperback)' })).toContainText('install');
+      await options.close();
+    };
+    let opened = context.waitForEvent('page');
+    await page.getByRole('button', { name: 'add to onidoku' }).click();
+    await listed(await opened);
+    await expect(page.locator('.od-prompt')).toHaveCount(0);
+
+    opened = context.waitForEvent('page');
+    await page.getByRole('link', { name: 'Add to Paperback' }).click();
+    await listed(await opened);
+  });
+
   test('installs every source of a repo at once', async ({ ext }) => {
     await ext.evaluate(() => (chrome.permissions.request = async () => true));
     await ext.getByRole('button', { name: '+ add source' }).click();
@@ -789,6 +812,11 @@ test.describe('paperback sources', () => {
     const item = (await call<LibraryItem[]>(ext, { type: 'library' })).find((i) => i.entry.series.siteId === ID)!;
     expect(item.entry.series).toMatchObject({ title: 'Moon Garden', authors: ['Ana Ruiz', 'Ken Ito'], genres: ['Fantasy', 'Slice of life'] });
     expect(item.entry.chapters.map((c) => c.title).slice(0, 2)).toEqual(['Chapter 1: The Beginning', 'Chapter 2']);
+
+    // The details page links to the title's own page, the URL the source shares.
+    const details = await extPage(context, ext, `details.html?id=${encodeURIComponent(item.entry.series.id)}`);
+    await expect(details.locator('.source-link')).toHaveAttribute('href', `${SITE}/series/moon-garden`);
+    await details.close();
 
     const reader = await context.newPage();
     await reader.goto(ext.url());

@@ -27,3 +27,6 @@ export const paperbackStateKey = (configId: string) => `paperbackState:${configI
  * so Paperback requests and images for them go through an open tab of the site.
  */
 export const CF_HOSTS_KEY = 'cloudflareHosts';
+
+/** chrome.storage.local key holding the AniList login (see AnilistLogin in anilist.ts): token and account. */
+export const ANILIST_KEY = 'anilist';

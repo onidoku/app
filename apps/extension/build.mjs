@@ -1,3 +1,4 @@
+import { watch as watchFs } from 'node:fs';
 import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import * as esbuild from 'esbuild';
 
@@ -40,7 +41,7 @@ function manifestFor(manifest) {
   return manifest;
 }
 
-// Release builds ship with no site configs at all; users add them. Dev builds preinstall the
+// Release builds install only the featured configs below, on first install. Dev builds preinstall the
 // configs for the local test site so the extension is usable immediately.
 async function devConfigs() {
   if (!dev) return [];
@@ -50,20 +51,24 @@ async function devConfigs() {
 }
 
 // Sources for public-domain and openly licensed sites (configs/featured/), offered on the Sources
-// page in every build. Nothing is installed until the user picks one.
+// page in every build, and installed on first install in release builds (see background.ts).
 async function featuredConfigs() {
   const dir = new URL('../../configs/featured/', import.meta.url);
   const files = (await readdir(dir)).filter((f) => f.endsWith('.json')).sort();
   return Promise.all(files.map(async (f) => JSON.parse(await readFile(new URL(f, dir), 'utf8'))));
 }
 
+/** Copies static/ (pages, styles, the manifest) into the build. */
+async function copyStatic() {
+  await cp('static', outdir, { recursive: true });
+  if (!paperback) for (const page of PAPERBACK_PAGES) await rm(`${outdir}/${page}.html`, { force: true });
+  const manifestPath = `${outdir}/manifest.json`;
+  await writeFile(manifestPath, JSON.stringify(manifestFor(JSON.parse(await readFile(manifestPath, 'utf8'))), null, 2));
+}
+
 await rm(outdir, { recursive: true, force: true });
 await mkdir(outdir, { recursive: true });
-await cp('static', outdir, { recursive: true });
-if (!paperback) for (const page of PAPERBACK_PAGES) await rm(`${outdir}/${page}.html`);
-
-const manifestPath = `${outdir}/manifest.json`;
-await writeFile(manifestPath, JSON.stringify(manifestFor(JSON.parse(await readFile(manifestPath, 'utf8'))), null, 2));
+await copyStatic();
 
 const ctx = await esbuild.context({
   entryPoints: {
@@ -79,6 +84,7 @@ const ctx = await esbuild.context({
     search: 'src/search.ts',
     explore: 'src/explore.ts',
     'reader-page': 'src/reader-page.ts',
+    welcome: 'src/welcome.ts',
     // The sandboxed frame Paperback sources run in, and the offscreen page holding those frames.
     ...(paperback ? Object.fromEntries(PAPERBACK_PAGES.map((page) => [page, `src/${page}.ts`])) : {}),
   },
@@ -102,7 +108,18 @@ const ctx = await esbuild.context({
 
 if (watch) {
   await ctx.watch();
-  console.log('Watching src/ (restart for changes in static/). Reload the extension in chrome://extensions after edits.');
+  // Editors save in bursts (temp file, rename): copy once things settle.
+  let pending;
+  watchFs('static', { recursive: true }, () => {
+    clearTimeout(pending);
+    pending = setTimeout(() => {
+      copyStatic().then(
+        () => console.log('copied static/'),
+        (err) => console.error('couldn’t copy static/', err),
+      );
+    }, 100);
+  });
+  console.log('Watching src/ and static/. Reload the extension in chrome://extensions after edits.');
 } else {
   await ctx.rebuild();
   await ctx.dispose();

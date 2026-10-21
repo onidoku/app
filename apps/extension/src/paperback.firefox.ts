@@ -39,6 +39,10 @@ export async function paperbackSiteSource(_url: string): Promise<SiteSource | nu
   return null;
 }
 
-export async function findPaperbackPage(_url: string, _titles: string[]): Promise<string> {
+export async function findPaperbackPage(_url: string, _titles: string[], _saved?: string[]): Promise<string> {
   throw unsupported();
+}
+
+export async function paperbackShareUrl(_config: SiteConfig, _url: string): Promise<string | undefined> {
+  return undefined;
 }

@@ -13,6 +13,7 @@ import {
   normalizeUrl,
   newCount,
   nextToRead,
+  paperbackRepoUrl,
   parseServer,
   parseSiteConfig,
   searchSeries,
@@ -46,10 +47,11 @@ import {
   type StorageUsage,
 } from './messages';
 import { parseHtml } from '#parse-html';
-import { allowSourceImages, fetchPaperbackImage, findPaperbackPage, forgetSourceImages, paperbackSiteSource, fetchPaperbackRepo, installPaperback, paperbackRuntime, removePaperback, retryPaperbackSections } from '#paperback';
+import { allowSourceImages, fetchPaperbackImage, findPaperbackPage, forgetSourceImages, paperbackSiteSource, fetchPaperbackRepo, installPaperback, paperbackRuntime, paperbackShareUrl, removePaperback, retryPaperbackSections } from '#paperback';
 import { clientFor } from './servers';
 import { installConfig, loadRegistry, loadServers, loadSettings, removeConfig, removeServer, saveServer, saveSettings } from './storage';
 import { libraryDb } from './library-db';
+import { anilistLogout, anilistSave, anilistSearch, anilistState, anilistTracking, startAnilistLogin, syncToAnilist, watchLoginTabs } from './anilist';
 
 const ALARM = 'check-updates';
 const CHECK_EVERY_MINUTES = 12 * 60;
@@ -86,7 +88,7 @@ async function ensureAlarm(): Promise<void> {
   }
 }
 
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(async (details) => {
   if (__DEV__) {
     for (const raw of __DEV_CONFIGS__) await installConfig(raw);
   }
@@ -94,7 +96,15 @@ chrome.runtime.onInstalled.addListener(async () => {
   await refreshBadge();
   await syncPagePrompt();
   await syncDetectScript();
+  // Only on a fresh install, not updates: someone who removed a suggested source keeps it removed.
+  // Dev builds skip it so automated tests start from just the test site and get no stray tab.
+  if (details.reason === 'install' && !__DEV__) {
+    for (const raw of __FEATURED_CONFIGS__) await installConfig(raw);
+    await chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') });
+  }
 });
+
+watchLoginTabs();
 
 chrome.runtime.onStartup.addListener(async () => {
   await ensureAlarm();
@@ -203,6 +213,7 @@ async function handle(request: Request, sender: chrome.runtime.MessageSender): P
       const entry = await library.markRead(request.url);
       await refreshBadge();
       void syncReadToServer(request.url);
+      void syncToAnilist(entry);
       return entry ?? null;
     }
     case 'openReader': {
@@ -226,10 +237,34 @@ async function handle(request: Request, sender: chrome.runtime.MessageSender): P
       const entry = await library.setProgress(request.id, request.url);
       if (!entry) throw new Error('that chapter is no longer in the library');
       await refreshBadge();
+      // Forward only: marking chapters unread here leaves AniList's count alone.
+      void syncToAnilist(entry);
+      return toItem(entry);
+    }
+    case 'anilistState':
+      return anilistState();
+    case 'anilistLogin':
+      return startAnilistLogin();
+    case 'anilistLogout':
+      return anilistLogout();
+    case 'anilistSearch':
+      return anilistSearch(request.query);
+    case 'anilistTracking':
+      return anilistTracking(request.mediaId);
+    case 'anilistSave':
+      return anilistSave(request.mediaId, request.changes);
+    case 'anilistLink': {
+      const entry = await library.setTracker(request.id, 'anilist', request.media);
+      if (!entry) throw new Error('that series is no longer in the library');
+      await syncToAnilist(entry);
       return toItem(entry);
     }
     case 'openChapter':
       return openChapter(request.url, request.reader, request.tabId ?? sender.tab?.id, request.inOnidoku);
+    case 'shareUrl': {
+      const config = (await loadRegistry()).match(request.url)?.config;
+      return (config?.paperback && (await paperbackShareUrl(config, request.url))) || null;
+    }
     case 'siteSource':
       return paperbackSiteSource(request.url);
     case 'openInOnidoku': {
@@ -274,6 +309,12 @@ async function handle(request: Request, sender: chrome.runtime.MessageSender): P
       return null;
     case 'paperbackRepo':
       return fetchPaperbackRepo(request.url);
+    case 'openPaperbackRepo': {
+      // The address comes from a web page: only an https repo address gets through.
+      const url = paperbackRepoUrl(request.url);
+      await chrome.tabs.create({ url: chrome.runtime.getURL(`options.html#add-paperback=${encodeURIComponent(url)}`), index: sender.tab && sender.tab.index + 1 });
+      return true;
+    }
     case 'installPaperback': {
       const config = await installPaperback(request.repo, request.sourceId);
       await syncPagePrompt();
@@ -480,7 +521,11 @@ async function refreshSeries(id: string): Promise<LibraryItem> {
   if (!config) throw new Error(`site config "${entry.series.siteId}" is not installed`);
   const { series, chapters, readUpTo } = await loadSeries(entry.series.url, config, await sourceIO());
   let merged = (await library.mergeChapters(id, chapters, series))!.entry;
-  if (readUpTo) merged = (await library.advanceTo(id, readUpTo)) ?? merged;
+  if (readUpTo) {
+    merged = (await library.advanceTo(id, readUpTo)) ?? merged;
+    // Read further in the server's own app: AniList hears about it too.
+    void syncToAnilist(merged);
+  }
   await refreshBadge();
   return toItem(merged);
 }
@@ -546,7 +591,7 @@ async function runUpdateCheck(): Promise<CheckResult> {
 async function openInOnidoku(url: string, titles: string[], tabId: number): Promise<boolean> {
   const match = (await loadRegistry()).match(url);
   const target = !match
-    ? await findPaperbackPage(url, titles)
+    ? await findPaperbackPage(url, titles, (await library.list()).map((e) => e.series.url))
     : match.kind === 'chapter'
       ? readerUrl(normalizeUrl(url))
       : previewUrl(normalizeUrl(url));
