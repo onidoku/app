@@ -1,7 +1,7 @@
 import { button, h } from './dom';
 import { detailsUrl, errorMessage, pageUrl, previewUrl, send, type CheckResult, type LibraryItem, type PageInfo } from './messages';
 import type { Detection } from '@onidoku/core';
-import { sourceIcon } from './ui';
+import { iconButton, sourceIcon, type ICONS } from './ui';
 import { setImageSrc } from './servers';
 
 /** Series shown in the popup; the rest are one click away in the library. */
@@ -19,40 +19,6 @@ const searchInput = document.getElementById('search-input') as HTMLInputElement;
 function setStatus(message: string): void {
   statusEl.textContent = message;
   statusEl.hidden = !message;
-}
-
-// ---- Icons (stroke paths on a 24px grid) ---------------------------------------------------
-
-const ICONS = {
-  library: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z',
-  explore: 'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20zM16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36z',
-  search: 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM21 21l-4.35-4.35',
-  sources: 'M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
-  refresh: 'M21 12a9 9 0 1 1-2.64-6.36L21 8M21 3v5h-5',
-  reader: 'M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z',
-  play: 'M7 4l13 8-13 8z',
-  plus: 'M12 5v14M5 12h14',
-  check: 'M5 12l5 5L20 7',
-} as const;
-
-function icon(name: keyof typeof ICONS): SVGSVGElement {
-  const ns = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(ns, 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('class', `icon icon-${name}`);
-  svg.setAttribute('aria-hidden', 'true');
-  const path = document.createElementNS(ns, 'path');
-  path.setAttribute('d', ICONS[name]);
-  svg.append(path);
-  return svg;
-}
-
-/** A button with an icon and a label (visible, or only as its accessible name when `iconOnly`). */
-function iconButton(name: keyof typeof ICONS, label: string, className: string, onClick: () => unknown, iconOnly = false): HTMLButtonElement {
-  const el = button('', className, onClick, iconOnly ? label : undefined);
-  el.append(icon(name), iconOnly ? '' : h('span', { text: label }));
-  if (iconOnly) el.setAttribute('aria-label', label);
-  return el;
 }
 
 // ---- Navigation ----------------------------------------------------------------------------

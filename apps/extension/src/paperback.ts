@@ -516,6 +516,23 @@ export async function paperbackSiteSource(url: string): Promise<SiteSource | nul
   return { id: config.id, name: config.name, icon: config.icon };
 }
 
+/**
+ * A Paperback title's page on its source's site (the source's share URL), or undefined when the
+ * source has none. Only http(s) addresses: the source is downloaded code.
+ */
+export async function paperbackShareUrl(config: SiteConfig, url: string): Promise<string | undefined> {
+  const runtime = paperbackRuntime(config);
+  if (!runtime) return undefined;
+  const share = await runtime.call('getMangaShareUrl', [paperbackUrls(config.id).mangaId(url)]).catch(() => undefined);
+  if (typeof share !== 'string') return undefined;
+  try {
+    const { protocol } = new URL(share);
+    return protocol === 'https:' || protocol === 'http:' ? share : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** An address reduced for comparing pages: no scheme, www., query, case or trailing slash. */
 function comparable(url: string): string {
   const u = new URL(url);
@@ -526,49 +543,96 @@ const within = (page: string, prefix: string) => page === prefix || page.startsW
 
 /** Search results checked against the page per title tried: each costs no request (share URLs are local). */
 const MATCH_RESULTS = 10;
+/** Ids guessed from the address whose details are fetched when the source has no share URLs. */
+const ID_DETAILS_TRIES = 2;
+
+/**
+ * Ids a source might give the title at this address, likeliest first: runs of the path's last
+ * segments, shortest first (Dynasty's /series/<id>, a site's /manga/<id>/<slug>), then the whole
+ * path and the address.
+ */
+function idGuesses(url: string): string[] {
+  const u = new URL(url);
+  const path = decodeURI(u.pathname).replace(/\/+$/, '');
+  const segments = path.split('/').filter(Boolean).slice(-6);
+  const runs: string[] = [];
+  for (let len = 1; len <= segments.length; len++) {
+    for (let start = segments.length - len; start >= 0; start--) runs.push(segments.slice(start, start + len).join('/'));
+  }
+  return [...new Set([...runs, path, url])].filter(Boolean);
+}
+
+/** A title reduced for comparing: case, punctuation and spacing don't count. */
+const sameTitle = (title: string) => title.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
 
 /**
  * Where a page of a Paperback source's site is in onidoku. Paperback titles have ids, not URLs,
- * so the source is searched for what the page calls itself, and a result whose link (its share
- * URL) is this page, or contains it, is the title. A page under the title's link is a chapter if
- * one of its chapter ids is in the rest of the address. Without a match, it's a search for the
- * page's title on that source; the site's home page is that source's explore lists.
+ * so a title whose link (its share URL) is this page, or contains it, is the one: first among the
+ * titles in the library (`saved`, their onidoku addresses), then ids guessed from the address,
+ * then the source's search results for what the page calls itself. A page under the title's link is a chapter if one of its chapter
+ * ids is in the rest of the address. Without a match, it's a search for the page's title on that
+ * source; the site's home page is that source's explore lists.
  */
-export async function findPaperbackPage(url: string, titles: string[]): Promise<string> {
+export async function findPaperbackPage(url: string, titles: string[], saved: string[] = []): Promise<string> {
   const install = PAPERBACK_SUPPORTED ? await installOnSite(url) : undefined;
   if (!install) throw new Error('no installed Paperback source has this site');
   const config = paperbackSiteConfig(install);
   const page = comparable(url);
   const home = comparable(install.listing.websiteBaseURL);
   const explore = chrome.runtime.getURL(`explore.html?${new URLSearchParams({ source: config.id })}`);
-  if (page === home || !titles.length) return explore;
+  if (page === home) return explore;
 
   const runtime = paperbackRuntime(config)!;
   const client = new PaperbackClient(config, runtime);
   const urls = paperbackUrls(config.id);
+  /** Where the page is if it's this title's page or, unless `exact`, one of its chapters. */
+  const place = async (mangaUrl: string, exact = false): Promise<string | undefined> => {
+    let link: string;
+    try {
+      const share = await runtime.call('getMangaShareUrl', [urls.mangaId(mangaUrl)]);
+      if (typeof share !== 'string') return undefined;
+      link = comparable(share);
+    } catch {
+      return undefined;
+    }
+    if (page === link) return previewUrl(mangaUrl);
+    if (exact || !within(page, link)) return undefined;
+    // Below the title's own page: look for the chapter in the rest of the address.
+    const rest = page.slice(link.length + 1);
+    const { chapters } = await client.loadSeries(mangaUrl).catch(() => ({ chapters: [] }));
+    const chapter = chapters.find((c) => {
+      const id = urls.chapterIds(c.url).chapterId.toLowerCase().replace(/\/+$/, '');
+      const tail = id.includes('/') ? id.split('/').filter(Boolean).at(-1)! : id;
+      return rest === tail || rest.split('/').includes(tail);
+    });
+    return chapter ? readerUrl(chapter.url) : previewUrl(mangaUrl);
+  };
+
+  for (const mangaUrl of saved.filter((u) => u.startsWith(`${urls.base}/manga/`))) {
+    const found = await place(mangaUrl);
+    if (found) return found;
+  }
+  // The address usually holds the title's id: a guess the source turns back into exactly this page
+  // is it. Not one whose page is merely above this one: Dynasty's "series" would be the directory.
+  const guesses = idGuesses(url);
+  for (const id of guesses) {
+    const found = await place(urls.manga(id), true);
+    if (found) return found;
+  }
+  if (!titles.length) return explore;
+  // Sources without share URLs: the likeliest ids (the address's last segments) whose details carry this page's title.
+  const wanted = new Set(titles.map(sameTitle));
+  const pagePath = decodeURI(new URL(url).pathname).replace(/\/+$/, '');
+  for (const id of guesses.filter((g) => pagePath.endsWith(`/${g}`)).slice(0, ID_DETAILS_TRIES)) {
+    const details = await runtime.call('getMangaDetails', [id]).catch(() => undefined);
+    const names = (details as { mangaInfo?: { titles?: unknown } } | undefined)?.mangaInfo?.titles;
+    if (Array.isArray(names) && names.some((n) => typeof n === 'string' && wanted.has(sameTitle(n)))) return previewUrl(urls.manga(id));
+  }
   for (const title of titles.slice(0, 3)) {
     const results = await client.search(title).catch(() => []);
     for (const result of results.slice(0, MATCH_RESULTS)) {
-      const mangaId = urls.mangaId(result.url);
-      const share = await runtime.call('getMangaShareUrl', [mangaId]).catch(() => undefined);
-      if (typeof share !== 'string') continue;
-      let link: string;
-      try {
-        link = comparable(share);
-      } catch {
-        continue;
-      }
-      if (!within(page, link)) continue;
-      if (page === link) return previewUrl(result.url);
-      // Below the title's own page: look for the chapter in the rest of the address.
-      const rest = page.slice(link.length + 1);
-      const { chapters } = await client.loadSeries(result.url).catch(() => ({ chapters: [] }));
-      const chapter = chapters.find((c) => {
-        const id = urls.chapterIds(c.url).chapterId.toLowerCase().replace(/\/+$/, '');
-        const tail = id.includes('/') ? id.split('/').filter(Boolean).at(-1)! : id;
-        return rest === tail || rest.split('/').includes(tail);
-      });
-      return chapter ? readerUrl(chapter.url) : previewUrl(result.url);
+      const found = await place(result.url);
+      if (found) return found;
     }
   }
   return chrome.runtime.getURL(`search.html?${new URLSearchParams({ q: titles[0]!, source: config.id })}`);

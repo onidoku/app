@@ -54,9 +54,7 @@ class PagePrompt {
     if (this.match.kind === 'series') {
       if (!info.inLibrary) return [button('add to library', 'primary', () => this.addSeries(location.href)), inOnidoku];
       const details = button('details', 'secondary', () => send({ type: 'openDetails', id: info.seriesId! }));
-      return info.next
-        ? [button(`continue: ${info.next.title}`, 'primary', () => location.assign(info.next!.url)), details]
-        : [details];
+      return info.next ? [continueButton(info.next), details] : [details];
     }
     const actions = [button('open reader', 'primary', () => this.openReader()), inOnidoku];
     const seriesUrl = !info.inLibrary && this.seriesUrlFromPage();
@@ -90,6 +88,13 @@ class PagePrompt {
   }
 }
 
+/** "continue reading" over the chapter it opens, which is cut short when long (in full on hover). */
+function continueButton(next: { title: string; url: string }): HTMLButtonElement {
+  const el = button('', 'primary continue', () => location.assign(next.url), `continue: ${next.title}`);
+  el.append(h('span', { class: 'label', text: 'continue reading' }), h('span', { class: 'chapter', text: next.title }));
+  return el;
+}
+
 /** Replaces this page with the same title or chapter in onidoku (the background navigates the tab). */
 async function openInOnidoku(root: ShadowRoot, status?: (text: string, error?: boolean) => void): Promise<void> {
   for (const b of Array.from(root.querySelectorAll('button'))) b.disabled = true;
@@ -104,13 +109,15 @@ async function openInOnidoku(root: ShadowRoot, status?: (text: string, error?: b
 
 /**
  * What this page calls the title it's about, best guesses first: a link back up to a page this
- * one is under (a chapter's series, in breadcrumbs), the page's own heading and share title,
- * and its <title> without the site's name.
+ * one is under (a chapter's series, in breadcrumbs, not the site's menus, whose "Directory" or
+ * "Manga" sits above every title), the page's own heading and share title, and the parts of its
+ * <title> that aren't the site's name.
  */
 function pageTitles(): string[] {
   const here = location.href.replace(/[?#].*$/, '').replace(/\/+$/, '');
   const up = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]'))
     .filter((a) => {
+      if (a.closest('nav, header, [role="navigation"], [role="menubar"], .nav, .navbar, .menu')) return false;
       const href = a.href.replace(/[?#].*$/, '').replace(/\/+$/, '');
       return href.length > new URL(here).origin.length + 1 && here.startsWith(`${href}/`);
     })
@@ -120,13 +127,30 @@ function pageTitles(): string[] {
     ...up,
     document.querySelector('h1')?.textContent ?? '',
     document.querySelector<HTMLMetaElement>('meta[property="og:title"]')?.content ?? '',
-    document.title.split(/\s+[-–—|·•]\s+/)[0] ?? '',
+    ...titleParts(),
   ];
   const seen = new Set<string>();
   return candidates
     .map((t) => t.replace(/\s+/g, ' ').trim())
     .filter((t) => t.length >= 2 && t.length <= 120 && !seen.has(t.toLowerCase()) && seen.add(t.toLowerCase()))
     .slice(0, 4);
+}
+
+/** The parts of the page's <title> ("Site » Title", "Title - Site") other than the site's name. */
+function titleParts(): string[] {
+  const names = new Set(
+    [
+      document.querySelector<HTMLMetaElement>('meta[property="og:site_name"]')?.content,
+      document.querySelector<HTMLMetaElement>('meta[name="application-name"]')?.content,
+      // The logo linking home usually carries the site's name, as text or as its image's alt.
+      ...Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href="/"]')).flatMap((a) => [a.textContent, a.querySelector('img')?.alt]),
+    ]
+      .map((n) => n?.replace(/\s+/g, ' ').trim().toLowerCase())
+      .filter((n): n is string => Boolean(n)),
+  );
+  const parts = document.title.split(/\s+[-–—|·•»«]\s+/).map((p) => p.trim()).filter(Boolean);
+  const own = parts.filter((p) => !names.has(p.toLowerCase()));
+  return own.length ? own : parts.slice(0, 1);
 }
 
 /**

@@ -1,7 +1,11 @@
-# For a version tag (e.g. v0.1.0): tests, builds the Chrome and Firefox packages and creates a GitHub release
-# with them. Firefox versions go to addons.mozilla.org by hand for now (the submit step below is paused).
+# For a version tag (e.g. v0.1.0): tests, builds the Chrome and Firefox packages, creates a GitHub release
+# with them, then submits them to addons.mozilla.org and Microsoft Edge Add-ons for review.
 # Mozilla signs the Firefox version once a reviewer approves it; then run the "firefox signed xpi" workflow
 # to attach the signed .xpi to the release.
+#
+# Needs repo secrets FIREFOX_ADDON_JWT_ISSUERS and FIREFOX_ADDON_JWT_SECRET (AMO API key and secret),
+# EDGE_ADDON_CLIENT_ID and EDGE_ADDON_API_KEY (Partner Center → Publish API), and the repo variable
+# EDGE_PRODUCT_ID (the product id on Partner Center's extension overview, a GUID).
 name: release
 
 on:
@@ -40,27 +44,6 @@ jobs:
       - run: pnpm test
       - run: pnpm ext:package
 
-      # Paused: submit to AMO by hand for now. To automate again, drop the `if` and set repo secrets
-      # FIREFOX_ADDON_JWT_ISSUERS and FIREFOX_ADDON_JWT_SECRET (AMO API key and secret).
-      - name: Submit to addons.mozilla.org
-        if: false
-        working-directory: apps/extension
-        env:
-          AMO_ISSUER: ${{ secrets.FIREFOX_ADDON_JWT_ISSUERS }}
-          AMO_SECRET: ${{ secrets.FIREFOX_ADDON_JWT_SECRET }}
-        run: |
-          node scripts/amo-metadata.mjs "$RUNNER_TEMP/amo-metadata.json"
-          # Listed versions are signed after human review, so don't wait for approval here.
-          npx web-ext sign \
-            --channel listed \
-            --source-dir dist-firefox \
-            --upload-source-code "release/onidoku-source-$VERSION.zip" \
-            --amo-metadata "$RUNNER_TEMP/amo-metadata.json" \
-            --api-key "$AMO_ISSUER" \
-            --api-secret "$AMO_SECRET" \
-            --approval-timeout 0 \
-            --artifacts-dir "$RUNNER_TEMP/web-ext-artifacts"
-
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -77,3 +60,69 @@ jobs:
             --notes-file "$RUNNER_TEMP/notes.md" \
             --generate-notes \
             --verify-tag
+
+  # Each store is its own job working from the release's packages, so one that failed (a review still open,
+  # an expired key) can be retried with "Re-run failed jobs" without touching the release or the other store.
+  amo:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Download the Firefox and source packages
+        working-directory: apps/extension
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          gh release download "$GITHUB_REF_NAME" -p "onidoku-firefox-$version.zip" -p "onidoku-source-$version.zip" -D release
+          unzip -q "release/onidoku-firefox-$version.zip" -d dist-firefox
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - name: Submit to addons.mozilla.org
+        working-directory: apps/extension
+        env:
+          AMO_ISSUER: ${{ secrets.FIREFOX_ADDON_JWT_ISSUERS }}
+          AMO_SECRET: ${{ secrets.FIREFOX_ADDON_JWT_SECRET }}
+        run: |
+          node scripts/amo-metadata.mjs "$RUNNER_TEMP/amo-metadata.json"
+          # Listed versions are signed after human review, so don't wait for approval here.
+          pnpm exec web-ext sign \
+            --channel listed \
+            --source-dir dist-firefox \
+            --upload-source-code "release/onidoku-source-$VERSION.zip" \
+            --amo-metadata "$RUNNER_TEMP/amo-metadata.json" \
+            --api-key "$AMO_ISSUER" \
+            --api-secret "$AMO_SECRET" \
+            --approval-timeout 0 \
+            --artifacts-dir "$RUNNER_TEMP/web-ext-artifacts"
+
+  edge:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Download the Chrome package
+        working-directory: apps/extension
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          gh release download "$GITHUB_REF_NAME" -p "onidoku-chrome-$version.zip" -D release
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - name: Submit to Microsoft Edge Add-ons
+        working-directory: apps/extension
+        env:
+          EDGE_PRODUCT_ID: ${{ vars.EDGE_PRODUCT_ID }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_ADDON_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_ADDON_API_KEY }}
+        run: |
+          node scripts/edge-submit.mjs "release/onidoku-chrome-$VERSION.zip" \
+            "onidoku $VERSION. changes: https://github.com/$GITHUB_REPOSITORY/releases/tag/$GITHUB_REF_NAME"

@@ -46,6 +46,11 @@ const ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect 
 /** Serves the repo under /paperback/; undefined for other paths. @param {URL} url */
 export function handlePaperbackRepo(url) {
   const path = url.pathname;
+  // The repo's page, with the "add to Paperback" link repo pages have.
+  if (path === '/paperback/') {
+    const add = `paperback://addRepo?displayName=Test%20Repo&url=${encodeURIComponent(`${url.origin}/paperback`)}`;
+    return { status: 200, type: 'text/html; charset=utf-8', body: `<!doctype html><title>Test Repo</title><h1>Test Repo</h1><p><a href="${add}">Add to Paperback</a></p>` };
+  }
   if (path === '/paperback/versioning.json') {
     return { status: 200, type: 'application/json', body: JSON.stringify(paperbackVersioning(url.origin)), headers: { 'access-control-allow-origin': '*' } };
   }

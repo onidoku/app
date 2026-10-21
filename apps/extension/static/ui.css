@@ -10,6 +10,7 @@
   --accent-text: #ffffff;
   --new: #e0306f;
   --danger: #dc2626;
+  --danger-text: #ffffff;
   color-scheme: light dark;
 }
 
@@ -25,6 +26,7 @@
     --accent-text: #18181b;
     --new: #ff7aa8;
     --danger: #f87171;
+    --danger-text: #18181b;
   }
 }
 
@@ -2143,16 +2145,47 @@ body.app .section-head h2 {
   gap: 8px 12px;
 }
 
+/* The confirming button of a removal: filled red, with the same trash icon as what asked. */
+button.destructive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--danger);
+  color: var(--danger-text);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  transition: filter 120ms ease;
+}
+
+button.destructive .icon {
+  width: 15px;
+  height: 15px;
+}
+
+button.destructive:hover:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+button.destructive:active:not(:disabled) {
+  filter: brightness(0.8);
+}
+
+button.destructive:focus-visible {
+  outline: 2px solid var(--danger);
+  outline-offset: 2px;
+}
+
+button.destructive:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 button.small {
   padding: 5px 12px;
   font-size: 13px;
-}
-
-button.destructive {
-  background: var(--danger);
-  border-color: var(--danger);
-  color: #fff;
-  font-weight: 600;
 }
 
 /* Add-source dialog */
@@ -2295,6 +2328,7 @@ body.app .dialog-head h2,
   /* Comfortable tap targets (at least ~40px). */
   button.secondary,
   button.primary,
+  button.destructive,
   .tab,
   .picker-item,
   .app-nav a,
@@ -2407,5 +2441,363 @@ body.app .dialog-head h2,
 
   .confirm-remove .config-actions > button {
     flex: 1;
+  }
+}
+
+/* ---- Welcome page ---- */
+
+body.welcome main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-top: 40px;
+}
+
+.welcome-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.welcome-head h1 {
+  margin: 0 0 4px;
+  font-size: 26px;
+}
+
+.welcome-features {
+  list-style: none;
+  padding: 0;
+  margin: 28px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.welcome-features > li,
+.welcome-steps > li {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-radius: 10px;
+}
+
+.welcome-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.welcome-steps > li {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--border);
+  background: none;
+}
+
+.welcome-steps > li[hidden] {
+  display: none;
+}
+
+.step-text {
+  display: grid;
+  gap: 4px;
+}
+
+.step-action {
+  justify-self: end;
+}
+
+.step-body {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+}
+
+.step-body .configs {
+  margin: 4px 0 0;
+}
+
+.step-body .configs:empty {
+  display: none;
+}
+
+.step-body .error[hidden] {
+  display: none;
+}
+
+.step-done {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.step-done[hidden] {
+  display: none;
+}
+
+a.button.secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.welcome-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.welcome-foot > a:not(.button) {
+  color: var(--accent);
+}
+
+@media (max-width: 560px) {
+  body.welcome main {
+    padding-top: 24px;
+  }
+
+  .welcome-steps > li {
+    grid-template-columns: 1fr;
+  }
+
+  .step-action {
+    justify-self: start;
+  }
+}
+
+/* ---- Trackers ---- */
+
+.tracker-icon {
+  --size: 32px;
+  --hue: 205;
+}
+
+.hint.tracker {
+  margin-top: 8px;
+}
+
+.anilist-results {
+  margin-top: 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.anilist-cover {
+  width: 36px;
+  height: 52px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--surface);
+  flex: none;
+}
+
+/* "continue reading", with its play icon. */
+button.read-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+button.read-next .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* The linked AniList entry on a details page: status, chapters, score, notes, last update. */
+.tracker-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 560px;
+  margin: 12px 0 4px;
+  padding: 10px 8px 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.tracker-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.tracker-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tracker-head a {
+  color: var(--text);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tracker-head .hint {
+  flex: none;
+  font-size: 12px;
+}
+
+.tracker-facts {
+  color: var(--muted);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tracker-facts strong {
+  color: var(--text);
+}
+
+.tracker-card button.row-icon {
+  opacity: 1;
+}
+
+.anilist-editor textarea {
+  min-height: 0;
+  font: inherit;
+}
+
+.anilist-editor .field-row .field:not(.grow) {
+  flex: 0 1 130px;
+}
+
+.anilist-editor .error[hidden] {
+  display: none;
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tracker-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #02a9ff;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* Square icon buttons next to a page's main action (details page). */
+button.icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  color: var(--muted);
+}
+
+button.icon-only:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+button.icon-only.danger-text:hover:not(:disabled) {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+button.icon-only.spinning .icon {
+  animation: spin 1s linear infinite;
+}
+
+/* Square on phones too, where the other hero buttons stretch. */
+.hero .actions > button.icon-only {
+  flex: none;
+}
+
+/* The main button takes the leftover width on phones, so the icons stay on its row. */
+@media (max-width: 640px) {
+  .hero .actions:has(> .icon-only) {
+    flex-wrap: nowrap;
+  }
+
+  .hero .actions > button.read-next {
+    flex: 1 1 auto;
+  }
+}
+
+button.track-button {
+  position: relative;
+}
+
+.track-plus {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.chapter-section .tools button.icon-only {
+  flex: none;
+}
+
+/* Mark read / unread on each chapter row: quiet until the row is hovered or the button focused. */
+button.row-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  opacity: 0.55;
+}
+
+.chapters li:hover button.row-icon,
+button.row-icon:focus-visible {
+  opacity: 1;
+}
+
+button.row-icon:hover {
+  background: var(--surface);
+  color: var(--accent);
+}
+
+button.row-icon .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Touch screens have no hover: keep them fully visible. */
+@media (hover: none) {
+  button.row-icon {
+    opacity: 1;
   }
 }

@@ -1,4 +1,4 @@
-import type { BrowseKind, ChapterRef, LibraryEntry, PageKind, SearchResult, Series, ServerKind, SiteConfig, UpdateFailure } from '@onidoku/core';
+import type { AnilistChanges, AnilistMedia, BrowseKind, ChapterRef, LibraryEntry, PageKind, SearchResult, Series, ServerKind, SiteConfig, UpdateFailure } from '@onidoku/core';
 
 /** Requests handled by the background service worker, which owns all storage. */
 export type Request =
@@ -42,6 +42,8 @@ export type Request =
   | { type: 'importBackup'; backup: unknown }
   /** Lists a Paperback repo's sources (its versioning.json). */
   | { type: 'paperbackRepo'; url: string }
+  /** Opens the options page listing a repo, from a paperback:// link found on a page. */
+  | { type: 'openPaperbackRepo'; url: string }
   /** Downloads a Paperback source's code and installs it. */
   | { type: 'installPaperback'; repo: string; sourceId: string }
   /** Loads a Paperback chapter for the extension's reader page. */
@@ -50,13 +52,27 @@ export type Request =
   | { type: 'paperbackImage'; url: string }
   /** Reads explore lists for Paperback sources that got none at install. */
   | { type: 'refreshExplore' }
+  /** A Paperback title's page on its source's site, if the source can tell (null otherwise). */
+  | { type: 'shareUrl'; url: string }
   /** The installed Paperback source whose site a page is on, for the on-page prompt. */
   | { type: 'siteSource'; url: string }
   /**
    * Replaces the sending tab's site page with the same title or chapter in onidoku. `titles` are
    * what the page calls itself, for finding it on a Paperback source.
    */
-  | { type: 'openInOnidoku'; url: string; titles?: string[] };
+  | { type: 'openInOnidoku'; url: string; titles?: string[] }
+  /** Who's logged in to AniList, if anyone (AnilistState). */
+  | { type: 'anilistState' }
+  /** Opens AniList's login in a tab; the page asks for ANILIST_ORIGINS first. */
+  | { type: 'anilistLogin' }
+  | { type: 'anilistLogout' }
+  | { type: 'anilistSearch'; query: string }
+  /** Links a library series to an AniList entry (or unlinks it, `null`) and copies its progress there. */
+  | { type: 'anilistLink'; id: string; media: Pick<AnilistMedia, 'id' | 'title'> | null }
+  /** A linked series and the user's list entry for it, live from AniList (AnilistTracking). */
+  | { type: 'anilistTracking'; mediaId: number }
+  /** Changes the user's list entry (status, score, notes, progress); creates it if needed. */
+  | { type: 'anilistSave'; mediaId: number; changes: AnilistChanges };
 
 export interface Settings {
   /** Show sources marked 18+ in search. Off by default; installed 18+ sources still work everywhere else. */
