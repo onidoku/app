@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "onidoku",
   "short_name": "onidoku",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "reader mode, a library and new-chapter alerts for the comic and novel sites you already read.",
   "homepage_url": "https://github.com/onidoku/app",
   "minimum_chrome_version": "120",

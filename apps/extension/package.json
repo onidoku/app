@@ -1,6 +1,6 @@
 {
   "name": "@onidoku/extension",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "FSL-1.1-MIT",
   "private": true,
   "type": "module",
